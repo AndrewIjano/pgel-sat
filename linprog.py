@@ -9,7 +9,7 @@ def solve(c, C, d):
     cols_count = set_objective(lp, c)
     set_coefficients(lp, C)
 
-    glp_simplex(lp, None)
+    glp_interior(lp, None)
 
     x = get_primal_solution(lp, cols_count)
     y = get_dual_solution(lp, rows_count)
@@ -61,14 +61,14 @@ def set_coefficients(lp, C):
 
 
 def get_primal_solution(lp, cols_count):
-    return [glp_get_col_prim(lp, i + 1) for i in range(cols_count)]
+    return [glp_ipt_col_prim(lp, i + 1) for i in range(cols_count)]
 
 
 def get_dual_solution(lp, rows_count):
-    return [glp_get_row_dual(lp, j + 1) for j in range(rows_count)]
+    return [glp_ipt_row_dual(lp, j + 1) for j in range(rows_count)]
 
 def get_cost(lp):
-    return glp_get_obj_val(lp)
+    return glp_ipt_obj_val(lp)
 
 def delete_problem(lp):
     glp_delete_prob(lp)

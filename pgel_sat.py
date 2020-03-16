@@ -1,7 +1,10 @@
 from probabilistic_knowledge_base import ProbabilisticKnowledgeBase
+from math import isclose
 import numpy as np
 import gelpp_max_sat
 import linprog
+
+EPSILON = 1e-8
 
 
 def pgel_sat(kb):
@@ -11,17 +14,19 @@ def pgel_sat(kb):
 
     lp = linprog.solve(c, C, d)
 
-    while lp['cost'] != 0:
+    print_lp(lp)
+    while not is_min_cost_zero(lp):
         weights = get_weights(lp)
         result = generate_column(kb, weights)
         if not result['success']:
             return False
-        
+
         column = result['column']
         C = np.column_stack((C, column))
         c = np.append(c, 0)
 
         lp = linprog.solve(c, C, d)
+        print_lp(lp)
 
     return lp
 
@@ -48,8 +53,8 @@ def initialize_d(kb):
     return np.hstack((np.zeros(kb.n()), kb.b, 1))
 
 
-def get_total_cost(c, x):
-    return c @ x
+def is_min_cost_zero(lp):
+    return isclose(lp['cost'], 0, abs_tol=EPSILON)
 
 
 def get_weights(lp):
