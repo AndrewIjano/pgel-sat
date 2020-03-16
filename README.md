@@ -1,2 +1,2 @@
-# pgel-sat
+# PGEL-SAT
 A tractable Probabilistic Graphic EL++ SAT solver

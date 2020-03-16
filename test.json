@@ -1,0 +1,187 @@
+{
+  "vertices": [
+    "INIT",
+    "http://www.w3.org/2002/07/owl#Nothing",
+    "urn:absolute:teste07#Disease",
+    "urn:absolute:teste07#Dengue",
+    "urn:absolute:teste07#FeverAndRash",
+    "urn:absolute:teste07#DenguePatient",
+    "urn:absolute:teste07#Patient",
+    "urn:absolute:teste07#Symptom",
+    "http://www.w3.org/2002/07/owl#Thing",
+    "urn:absolute:teste07#Fever",
+    "urn:absolute:teste07#s1",
+    "urn:absolute:teste07#john",
+    "urn:absolute:teste07#suspectOf.urn:absolute:teste07#Dengue",
+    "urn:absolute:teste07#hasSymptom.urn:absolute:teste07#s1",
+    "urn:absolute:teste07#hasCause.urn:absolute:teste07#Disease",
+    "urn:absolute:teste07#hasCause.urn:absolute:teste07#Dengue",
+    "urn:absolute:teste07#hasSymptom.urn:absolute:teste07#Symptom"
+  ],
+  "roles": [
+    "ISA",
+    "urn:absolute:teste07#suspectOf",
+    "urn:absolute:teste07#hasSymptom",
+    "urn:absolute:teste07#hasCause"
+  ],
+  "arrows": [
+    [
+      {
+        "role": 0,
+        "vertex": 10,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      },
+      {
+        "role": 0,
+        "vertex": 11,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 0,
+        "vertex": 8,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [],
+    [
+      {
+        "role": 0,
+        "vertex": 1,
+        "derivated": false,
+        "axiom": false,
+        "probabilityID": 2
+      },
+      {
+        "role": 0,
+        "vertex": 2,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 0,
+        "vertex": 9,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      },
+      {
+        "role": 3,
+        "vertex": 3,
+        "derivated": false,
+        "axiom": false,
+        "probabilityID": 1
+      }
+    ],
+    [
+      {
+        "role": 1,
+        "vertex": 3,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 2,
+        "vertex": 7,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 3,
+        "vertex": 2,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [],
+    [
+      {
+        "role": 3,
+        "vertex": 3,
+        "derivated": false,
+        "axiom": false,
+        "probabilityID": 0
+      },
+      {
+        "role": 0,
+        "vertex": 7,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 0,
+        "vertex": 4,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 2,
+        "vertex": 10,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      },
+      {
+        "role": 0,
+        "vertex": 6,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [
+      {
+        "role": 1,
+        "vertex": 5,
+        "derivated": false,
+        "axiom": true,
+        "probabilityID": -1
+      }
+    ],
+    [],
+    [],
+    [],
+    []
+  ],
+  "roleInclusions": [],
+  "chainedRoleInclusions": [{ "first": 2, "second": 3, "third": 1 }],
+  "probabilityRestrictions": [
+    {
+      "axiomRestrictions": [
+        [0, -1.0],
+        [1, 1.0]
+      ],
+      "sign": "=",
+      "probabilityValue": 0.05
+    },
+    {
+      "axiomRestrictions": [[2, 1.0]],
+      "sign": "=",
+      "probabilityValue": 0.7
+    }
+  ],
+  "PBoxAxioms": 3
+}
