@@ -1,4 +1,3 @@
-import numpy as np
 import math
 from copy import deepcopy
 
@@ -9,7 +8,8 @@ def solve(kb, weights):
     if cut_set['is_weight_infinity']:
         return {'success': False}
 
-    return {'success': True, 'prob_axiom_indexes': cut_set['prob_axiom_indexes']}
+    return {'success': True,
+            'prob_axiom_indexes': cut_set['prob_axiom_indexes']}
 
 
 def min_cut(weighted_graph):

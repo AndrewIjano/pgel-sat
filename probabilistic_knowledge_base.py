@@ -26,7 +26,8 @@ class ProbabilisticKnowledgeBase:
         self.signs = []
         self.b = []
 
-    def add_concept_inclusion(self, sub_concept, super_concept, role, prob_axiom_index):
+    def add_concept_inclusion(
+            self, sub_concept, super_concept, role, prob_axiom_index):
         concept_inclusion = self.ConceptInclusion(
             sub_concept, super_concept, role, prob_axiom_index)
 
@@ -53,14 +54,16 @@ class ProbabilisticKnowledgeBase:
                     super_concept_index = arrow['vertex']
                     prob_axiom_index = arrow['probabilityID']
                     kb.add_concept_inclusion(
-                        sub_concept_index, super_concept_index, role_index, prob_axiom_index)
+                        sub_concept_index, super_concept_index, role_index,
+                        prob_axiom_index)
 
             kb.b = []
 
             rows = []
             cols = []
             data = []
-            for row, prob_restriction in enumerate(onto['probabilityRestrictions']):
+            for row, prob_restriction in enumerate(
+                    onto['probabilityRestrictions']):
                 for axiom_restriction in prob_restriction['axiomRestrictions']:
                     col, value = axiom_restriction
                     rows += [row]
@@ -95,7 +98,8 @@ class ProbabilisticKnowledgeBase:
                 prob_axiom_index = -1
 
             kb.add_concept_inclusion(
-                sub_concept_index, super_concept_index, role_index, prob_axiom_index)
+                sub_concept_index, super_concept_index, role_index,
+                prob_axiom_index)
 
         rows = []
         cols = []
@@ -103,7 +107,9 @@ class ProbabilisticKnowledgeBase:
         pbox_axioms_count = prob_index
         print(pbox_axioms_count)
         for row in range(pbox_axioms_count):
-            for col in sample(list(range(pbox_axioms_count)), randrange(pbox_axioms_count)):
+            for col in sample(
+                    list(range(pbox_axioms_count)),
+                    randrange(pbox_axioms_count)):
                 rows += [row]
                 cols += [col]
                 data += [random()]
