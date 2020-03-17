@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import scipy.sparse as sp
+from random import randrange, sample, random
 
 
 class ProbabilisticKnowledgeBase:
@@ -69,4 +70,47 @@ class ProbabilisticKnowledgeBase:
 
             kb.A = sp.coo_matrix((data, (rows, cols))).todense()
             kb.b = np.array(kb.b)
+        return kb
+
+    @classmethod
+    def random(cls, axioms_count, concepts_count):
+
+        kb = cls()
+
+        kb.concepts = [str(i) for i in range(concepts_count)]
+        kb.roles = ['ISA', 'A']
+
+        prob_index = 0
+        min_probs = 3
+        for _ in range(axioms_count):
+            sub_concept_index = randrange(concepts_count)
+            super_concept_index = randrange(concepts_count)
+            role_index = randrange(2)
+
+            if min_probs > 0:
+                prob_axiom_index = prob_index
+                prob_index += 1
+                min_probs -= 1
+            else:
+                prob_axiom_index = -1
+
+            kb.add_concept_inclusion(
+                sub_concept_index, super_concept_index, role_index, prob_axiom_index)
+
+        rows = []
+        cols = []
+        data = []
+        pbox_axioms_count = prob_index
+        print(pbox_axioms_count)
+        for row in range(pbox_axioms_count):
+            for col in sample(list(range(pbox_axioms_count)), randrange(pbox_axioms_count)):
+                rows += [row]
+                cols += [col]
+                data += [random()]
+            kb.b += [random()]
+
+        print(rows, cols, data)
+        kb.A = sp.coo_matrix((data, (rows, cols))).todense()
+        kb.b = np.array(kb.b)
+
         return kb

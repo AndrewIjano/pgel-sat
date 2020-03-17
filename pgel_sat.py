@@ -14,21 +14,19 @@ def pgel_sat(kb):
 
     lp = linprog.solve(c, C, d)
 
-    print_lp(lp)
     while not is_min_cost_zero(lp):
         weights = get_weights(lp)
         result = generate_column(kb, weights)
         if not result['success']:
-            return False
+            return {'satisfatible': False}
 
         column = result['column']
         C = np.column_stack((C, column))
         c = np.append(c, 0)
 
         lp = linprog.solve(c, C, d)
-        print_lp(lp)
 
-    return lp
+    return {'satisfatible': True, 'lp': lp}
 
 
 def initialize_C(kb):
@@ -67,6 +65,7 @@ def generate_column(kb, weights):
         return {'success': False}
 
     column = extract_column(kb, result)
+    print(weights, column)
     if weights @ column < 0:
         return {'success': False}
 
@@ -90,5 +89,5 @@ def print_lp(lp):
 
 if __name__ == "__main__":
     filename = 'test.json'
-    kb = ProbabilisticKnowledgeBase.from_file(filename)
-    pgel_sat(kb)
+    kb = ProbabilisticKnowledgeBase.random(2, 10)
+    print(pgel_sat(kb))
