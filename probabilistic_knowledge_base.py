@@ -1,16 +1,16 @@
 import json
 import numpy as np
 import scipy.sparse as sp
-from random import randrange, sample, random
+from random import randrange
 
 
 class ProbabilisticKnowledgeBase:
     class ConceptInclusion():
-        def __init__(self, sub_concept, super_concept, role, prob_axiom_index):
-            self.sub_concept = sub_concept
-            self.super_concept = super_concept
-            self.role = role
-            self.prob_axiom_index = prob_axiom_index
+        def __init__(self, **kwargs):
+            self.sub_concept = kwargs.setdefault('sub_concept', 0)
+            self.super_concept = kwargs.setdefault('super_concept', 0)
+            self.role = kwargs.setdefault('role', 0)
+            self.prob_axiom_index = kwargs.setdefault('prob_axiom_index', -1)
 
     def __init__(self):
         self.init = 0
@@ -24,13 +24,10 @@ class ProbabilisticKnowledgeBase:
 
         self.A = np.empty((0, 0))
         self.signs = []
-        self.b = []
+        self.b = np.empty(0)
 
-    def add_concept_inclusion(
-            self, sub_concept, super_concept, role, prob_axiom_index):
-        concept_inclusion = self.ConceptInclusion(
-            sub_concept, super_concept, role, prob_axiom_index)
-
+    def add_concept_inclusion(self, **kwargs):
+        concept_inclusion = self.ConceptInclusion(**kwargs)
         self.concept_inclusions += [concept_inclusion]
 
     def n(self):
@@ -50,14 +47,14 @@ class ProbabilisticKnowledgeBase:
 
             for sub_concept_index, arrows in enumerate(onto['arrows']):
                 for arrow in arrows:
-                    role_index = arrow['role']
-                    super_concept_index = arrow['vertex']
-                    prob_axiom_index = arrow['probabilityID']
                     kb.add_concept_inclusion(
-                        sub_concept_index, super_concept_index, role_index,
-                        prob_axiom_index)
+                        sub_concept=sub_concept_index,
+                        super_concept=arrow['vertex'],
+                        role=arrow['role'],
+                        prob_axiom_index=arrow['probabilityID']
+                    )
 
-            kb.b = []
+            b = []
 
             rows = []
             cols = []
@@ -69,54 +66,23 @@ class ProbabilisticKnowledgeBase:
                     rows += [row]
                     cols += [col]
                     data += [value]
-                kb.b += [prob_restriction['probabilityValue']]
+                b += [prob_restriction['probabilityValue']]
 
             kb.A = sp.coo_matrix((data, (rows, cols))).todense()
-            kb.b = np.array(kb.b)
+            kb.b = np.array(b)
         return kb
 
     @classmethod
-    def random(cls, axioms_count, concepts_count):
-
+    def random(cls, concepts_count, axioms_count):
         kb = cls()
-
         kb.concepts = [str(i) for i in range(concepts_count)]
         kb.roles = ['ISA', 'A']
 
-        prob_index = 0
-        min_probs = 3
         for _ in range(axioms_count):
-            sub_concept_index = randrange(concepts_count)
-            super_concept_index = randrange(concepts_count)
-            role_index = randrange(2)
-
-            if min_probs > 0:
-                prob_axiom_index = prob_index
-                prob_index += 1
-                min_probs -= 1
-            else:
-                prob_axiom_index = -1
-
             kb.add_concept_inclusion(
-                sub_concept_index, super_concept_index, role_index,
-                prob_axiom_index)
-
-        rows = []
-        cols = []
-        data = []
-        pbox_axioms_count = prob_index
-        print(pbox_axioms_count)
-        for row in range(pbox_axioms_count):
-            for col in sample(
-                    list(range(pbox_axioms_count)),
-                    randrange(pbox_axioms_count)):
-                rows += [row]
-                cols += [col]
-                data += [random()]
-            kb.b += [random()]
-
-        print(rows, cols, data)
-        kb.A = sp.coo_matrix((data, (rows, cols))).todense()
-        kb.b = np.array(kb.b)
+                sub_concept=randrange(concepts_count),
+                super_concept=randrange(concepts_count),
+                role=randrange(2)
+            )
 
         return kb

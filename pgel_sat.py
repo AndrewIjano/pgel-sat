@@ -1,13 +1,17 @@
-from probabilistic_knowledge_base import ProbabilisticKnowledgeBase
 from math import isclose
 import numpy as np
+from probabilistic_knowledge_base import ProbabilisticKnowledgeBase
 import gelpp_max_sat
 import linprog
 
 EPSILON = 1e-8
 
 
-def pgel_sat(kb):
+def is_satisfatible(kb):
+    return solve(kb)['satisfatible']
+
+
+def solve(kb):
     C = initialize_C(kb)
     c = initialize_c(kb)
     d = initialize_d(kb)
@@ -25,6 +29,9 @@ def pgel_sat(kb):
         c = np.append(c, 0)
 
         lp = linprog.solve(c, C, d)
+
+    assert (C @ lp['x'] < d + EPSILON / 2).all()
+    assert (C @ lp['x'] > d - EPSILON / 2).all()
 
     return {'satisfatible': True, 'lp': lp}
 
@@ -65,7 +72,6 @@ def generate_column(kb, weights):
         return {'success': False}
 
     column = extract_column(kb, result)
-    print(weights, column)
     if weights @ column < 0:
         return {'success': False}
 
@@ -87,7 +93,7 @@ def print_lp(lp):
     print('cost:', lp['cost'])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     filename = 'test.json'
-    kb = ProbabilisticKnowledgeBase.random(2, 10)
-    print(pgel_sat(kb))
+    kb = ProbabilisticKnowledgeBase.random(20, 10)
+    result = solve(kb)
