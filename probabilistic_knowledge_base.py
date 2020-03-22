@@ -73,7 +73,7 @@ class ProbabilisticKnowledgeBase:
         return kb
 
     @classmethod
-    def random(cls, concepts_count, axioms_count):
+    def random(cls, concepts_count, axioms_count, prob_axioms_count=0):
         kb = cls()
         kb.concepts = [str(i) for i in range(concepts_count)]
         kb.roles = ['ISA', 'A']
@@ -84,5 +84,17 @@ class ProbabilisticKnowledgeBase:
                 super_concept=randrange(concepts_count),
                 role=randrange(2)
             )
+
+        kb.A = np.zeros((prob_axioms_count, prob_axioms_count))
+        for i in range(prob_axioms_count):
+            kb.add_concept_inclusion(
+                sub_concept=randrange(concepts_count),
+                super_concept=randrange(concepts_count),
+                role=randrange(2),
+                prob_axiom_index=i
+            )
+            kb.A[i, i] = 1
+
+        kb.b = np.random.random_sample(prob_axioms_count)
 
         return kb

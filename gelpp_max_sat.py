@@ -52,7 +52,7 @@ def bfs(residual_graph, s, t):
 
 
 def get_augment_flow(t, s, parent, residual_graph):
-    augment_flow = math.inf
+    augment_flow = residual_graph.infinity
 
     for v in get_path(t, s, parent):
         u = parent[v]
@@ -118,7 +118,7 @@ class WeightedGraph:
     def __init__(self, kb, weights):
         self.adj = []
         self.order = len(kb.concepts)
-        self.infinity = math.inf
+        self.infinity = max(weights) + 1
 
         self.init = kb.init
         self.bottom = kb.bottom
