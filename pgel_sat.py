@@ -4,7 +4,7 @@ from probabilistic_knowledge_base import ProbabilisticKnowledgeBase
 import gelpp_max_sat
 import linprog
 
-EPSILON = 1e-8
+EPSILON = 1e-7
 
 
 def is_satisfatible(kb):
@@ -16,19 +16,30 @@ def solve(kb):
     c = initialize_c(kb)
     d = initialize_d(kb)
 
+    print('C:\n', C)
+    print('c:', c)
+    print('d:', d)
     lp = linprog.solve(c, C, d)
 
+    print_lp(lp)
+
+    i = 0
     while not is_min_cost_zero(lp):
+        print('\n\niteration:', i)
         weights = get_weights(lp)
+        print('weights', weights)
         result = generate_column(kb, weights)
         if not result['success']:
             return {'satisfatible': False}
+        print('column', result['column'])
 
         column = result['column']
         C = np.column_stack((C, column))
         c = np.append(c, 0)
 
         lp = linprog.solve(c, C, d)
+        print_lp(lp)
+        i += 1
 
     assert (C @ lp['x'] < d + EPSILON / 2).all()
     assert (C @ lp['x'] > d - EPSILON / 2).all()
@@ -67,7 +78,10 @@ def get_weights(lp):
 
 
 def generate_column(kb, weights):
+    # print('MAX SAT STARTED')
     result = gelpp_max_sat.solve(kb, weights)
+    # print('MAX SAT FINISHED')
+
     if not result['success']:
         return {'success': False}
 
@@ -88,12 +102,17 @@ def extract_column(kb, result):
 
 
 def print_lp(lp):
-    print('x:', lp['x'])
-    print('y:', lp['y'])
-    print('cost:', lp['cost'])
+    print('lp solution:')
+    print('\tx:', lp['x'])
+    print('\ty:', lp['y'])
+    print('\tcost:', lp['cost'])
 
 
 if __name__ == '__main__':
     filename = 'test.json'
-    kb = ProbabilisticKnowledgeBase.random(20, 10)
+    kb = ProbabilisticKnowledgeBase.from_file('test.json')
+    
+    print('\nSOLVER STARTED')
     result = solve(kb)
+    print('\nSOLVER FINISHED')
+    print('is satisfatible:', result['satisfatible'])

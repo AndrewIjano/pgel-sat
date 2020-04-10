@@ -1,4 +1,3 @@
-import math
 from copy import deepcopy
 
 
@@ -18,20 +17,25 @@ def min_cut(weighted_graph):
 
     residual_graph = deepcopy(weighted_graph)
 
-    is_there_augment_path, parent = bfs(residual_graph, s, t)
+    is_there_augment_path, path = get_augment_path(residual_graph, s, t)
     while is_there_augment_path:
-        augment_flow = get_augment_flow(t, s, parent, residual_graph)
-        update_path_weights(t, s, parent, residual_graph, augment_flow)
+        augment_flow = get_augment_flow(path, residual_graph)
+        update_path_weights(path, residual_graph, augment_flow)
 
-        is_there_augment_path, parent = bfs(residual_graph, s, t)
+        is_there_augment_path, path = get_augment_path(residual_graph, s, t)
 
     visited = dfs(residual_graph, s)
     cut_set = get_cut_set(weighted_graph, visited)
     return cut_set
 
 
-def bfs(residual_graph, s, t):
-    parent = [0] * residual_graph.order
+def get_augment_path(residual_graph, s, t):
+    def get_path(parent, s, t):
+        v = t
+        while v != s:
+            yield (parent[v], v)
+            v = parent[v]
+
     visited = [False] * residual_graph.order
     parent = [0] * residual_graph.order
 
@@ -45,36 +49,23 @@ def bfs(residual_graph, s, t):
             v = arrow.vertex
             if not visited[v] and arrow.weight > 0:
                 queue += [v]
-                parent[v] = u
                 visited[v] = True
+                parent[v] = u
 
-    return visited[t], parent
-
-
-def get_augment_flow(t, s, parent, residual_graph):
-    augment_flow = residual_graph.infinity
-
-    for v in get_path(t, s, parent):
-        u = parent[v]
-        augment_flow = min(augment_flow, residual_graph.get_weight(u, v))
-
-    return augment_flow
+    return visited[t], list(get_path(parent, s, t))
 
 
-def update_path_weights(t, s, parent, residual_graph, augment_flow):
-    for v in get_path(t, s, parent):
-        u = parent[v]
-        residual_graph.add_arrow(
-            u, v, residual_graph.get_weight(u, v) - augment_flow)
-        residual_graph.add_arrow(
-            v, u, residual_graph.get_weight(v, u) + augment_flow)
+def get_augment_flow(path, residual_graph):
+    return min(
+        (residual_graph.get_weight(u, v) for u, v in path),
+        default=residual_graph.infinity
+    )
 
 
-def get_path(t, s, parent):
-    v = t
-    while v != s:
-        yield v
-        v = parent[v]
+def update_path_weights(path, residual_graph, augment_flow):
+    for u, v in path:
+        residual_graph.increment_weight(u, v, -augment_flow)
+        residual_graph.increment_weight(v, u, +augment_flow)
 
 
 def dfs(residual_graph, s):
@@ -124,21 +115,19 @@ class WeightedGraph:
         self.bottom = kb.bottom
         self.negative_arrows = []
 
-        for _ in range(self.order):
-            self.adj += [[]]
+        self.adj = [[] for _ in range(self.order)]
 
         for ci in kb.concept_inclusions:
-            if ci.prob_axiom_index >= 0 and weights[ci.prob_axiom_index] >= 0:
+            if ci.prob_axiom_index < 0:
+                weight = self.infinity
+            else:
                 weight = weights[ci.prob_axiom_index]
-                prob_axiom_index = ci.prob_axiom_index
-            elif weights[ci.prob_axiom_index] < 0:
+
+            if weight < 0:
                 self.negative_arrows += [ci.prob_axiom_index]
                 continue
-            else:
-                weight = self.infinity
-                prob_axiom_index = -1
 
-            arrow = self.Arrow(ci.super_concept, weight, prob_axiom_index)
+            arrow = self.Arrow(ci.super_concept, weight, ci.prob_axiom_index)
             self.adj[ci.sub_concept] += [arrow]
 
     def add_arrow(self, vertex_1, vertex_2, weight):
@@ -154,3 +143,7 @@ class WeightedGraph:
             if arrow.vertex == vertex_2:
                 return arrow.weight
         return 0
+
+    def increment_weight(self, vertex_1, vertex_2, increment):
+        current_weight = self.get_weight(vertex_1, vertex_2)
+        self.add_arrow(vertex_1, vertex_2, current_weight + increment)
