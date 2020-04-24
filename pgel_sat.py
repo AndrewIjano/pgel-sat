@@ -78,9 +78,7 @@ def get_weights(lp):
 
 
 def generate_column(kb, weights):
-    # print('MAX SAT STARTED')
     result = gelpp_max_sat.solve(kb, weights)
-    # print('MAX SAT FINISHED')
 
     if not result['success']:
         return {'success': False}
@@ -109,9 +107,9 @@ def print_lp(lp):
 
 
 if __name__ == '__main__':
-    filename = 'test.json'
-    kb = ProbabilisticKnowledgeBase.from_file('test.json')
-    
+    filename = 'example8.owl'
+    kb = ProbabilisticKnowledgeBase.from_file(filename)
+
     print('\nSOLVER STARTED')
     result = solve(kb)
     print('\nSOLVER FINISHED')

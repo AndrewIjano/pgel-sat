@@ -1,7 +1,7 @@
-import json
 import numpy as np
 import scipy.sparse as sp
 from random import randrange
+import read_ontology
 
 
 class ProbabilisticKnowledgeBase:
@@ -39,37 +39,34 @@ class ProbabilisticKnowledgeBase:
     @classmethod
     def from_file(cls, file):
         kb = cls()
-        with open(file) as onto_file:
-            onto = json.load(onto_file)
+        onto = read_ontology.parse(file)
+        kb.concepts = onto['concepts']
+        kb.roles = onto['roles']
 
-            kb.concepts = onto['vertices']
-            kb.roles = onto['roles']
+        for ci in onto['concept_inclusions']:
+            kb.add_concept_inclusion(
+                sub_concept=ci[0],
+                super_concept=ci[1],
+                role=ci[2],
+                prob_axiom_index=ci[3]
+            )
 
-            for sub_concept_index, arrows in enumerate(onto['arrows']):
-                for arrow in arrows:
-                    kb.add_concept_inclusion(
-                        sub_concept=sub_concept_index,
-                        super_concept=arrow['vertex'],
-                        role=arrow['role'],
-                        prob_axiom_index=arrow['probabilityID']
-                    )
+        b = []
 
-            b = []
+        rows = []
+        cols = []
+        data = []
+        for row, pbox_restriction in enumerate(onto['pbox_restrictions']):
+            axiom_restrictions, sign, value = pbox_restriction
+            for axiom_restriction in axiom_restrictions:
+                col, value = axiom_restriction
+                rows += [row]
+                cols += [col]
+                data += [value]
+            b += [value]
 
-            rows = []
-            cols = []
-            data = []
-            for row, prob_restriction in enumerate(
-                    onto['probabilityRestrictions']):
-                for axiom_restriction in prob_restriction['axiomRestrictions']:
-                    col, value = axiom_restriction
-                    rows += [row]
-                    cols += [col]
-                    data += [value]
-                b += [prob_restriction['probabilityValue']]
-
-            kb.A = sp.coo_matrix((data, (rows, cols))).todense()
-            kb.b = np.array(b)
+        kb.A = sp.coo_matrix((data, (rows, cols))).todense()
+        kb.b = np.array(b)
         return kb
 
     @classmethod
