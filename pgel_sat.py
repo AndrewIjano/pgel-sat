@@ -3,8 +3,10 @@ import numpy as np
 from probabilistic_knowledge_base import ProbabilisticKnowledgeBase
 import gelpp_max_sat
 import linprog
+import sys
 
 EPSILON = 1e-7
+TRACE = False
 
 
 def is_satisfatible(kb):
@@ -16,29 +18,29 @@ def solve(kb):
     c = initialize_c(kb)
     d = initialize_d(kb)
 
-    print('C:\n', C)
-    print('c:', c)
-    print('d:', d)
+    trace(f'C:\n {C}')
+    trace(f'c: {c}')
+    trace(f'd: {d}')
     lp = linprog.solve(c, C, d)
 
-    print_lp(lp)
+    trace(str_lp(lp))
 
     i = 0
     while not is_min_cost_zero(lp):
-        print('\n\niteration:', i)
+        trace(f'\n\niteration: {i}')
         weights = get_weights(lp)
-        print('weights', weights)
+        trace(f'weights {weights}')
         result = generate_column(kb, weights)
         if not result['success']:
             return {'satisfatible': False}
-        print('column', result['column'])
+        trace(f'column {result["column"]}')
 
         column = result['column']
         C = np.column_stack((C, column))
         c = np.append(c, 0)
 
         lp = linprog.solve(c, C, d)
-        print_lp(lp)
+        trace(str_lp(lp))
         i += 1
 
     assert (C @ lp['x'] < d + EPSILON / 2).all()
@@ -99,18 +101,29 @@ def extract_column(kb, result):
     return column
 
 
-def print_lp(lp):
-    print('lp solution:')
-    print('\tx:', lp['x'])
-    print('\ty:', lp['y'])
-    print('\tcost:', lp['cost'])
+def str_lp(lp):
+    return f'''lp solution:
+    x: {lp['x']}
+    y: {lp['y']}
+    cost: {lp['cost']}'''
+
+
+def trace(string):
+    if TRACE:
+        print(string)
 
 
 if __name__ == '__main__':
-    filename = 'example8.owl'
-    kb = ProbabilisticKnowledgeBase.from_file(filename)
+    if len(sys.argv) < 2:
+        print('usage: python3 pgel_sat.py <inputfile> [--trace]')
+    else:
+        filename = sys.argv[1]
+        kb = ProbabilisticKnowledgeBase.from_file(filename)
 
-    print('\nSOLVER STARTED')
-    result = solve(kb)
-    print('\nSOLVER FINISHED')
-    print('is satisfatible:', result['satisfatible'])
+        TRACE = len(sys.argv) > 2 and sys.argv[2] == '--trace'
+        print(TRACE)
+        trace('\nSOLVER STARTED')
+        result = solve(kb)
+        trace('\nSOLVER FINISHED')
+        print('is satisfatible:', result['satisfatible'])
+        print(str_lp(result['lp']))

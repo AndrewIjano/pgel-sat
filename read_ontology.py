@@ -44,7 +44,6 @@ def parse(file):
         return -1
 
     def get_concept_inclusion(sub_concept, super_concept, basic_concepts):
-        print(sub_concept, '->', super_concept)
         role_idx = 0
         super_basic_concept = super_concept
 

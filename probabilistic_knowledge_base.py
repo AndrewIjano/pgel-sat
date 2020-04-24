@@ -59,10 +59,10 @@ class ProbabilisticKnowledgeBase:
         for row, pbox_restriction in enumerate(onto['pbox_restrictions']):
             axiom_restrictions, sign, value = pbox_restriction
             for axiom_restriction in axiom_restrictions:
-                col, value = axiom_restriction
+                col, coefficient = axiom_restriction
                 rows += [row]
                 cols += [col]
-                data += [value]
+                data += [coefficient]
             b += [value]
 
         kb.A = sp.coo_matrix((data, (rows, cols))).todense()
