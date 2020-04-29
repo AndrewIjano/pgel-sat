@@ -1,50 +1,45 @@
 import matplotlib.pyplot as plt
-import matplotlib.colors as mc
-import colorsys
+import pandas as pd
+import sys
 
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print('usage: python3 plot.py <filename.csv>')
+    else:
+        dataset = sys.argv[1]
+        df = pd.read_csv(dataset)
+        gp = df.groupby(['Concepts count', 'Axioms count'])
+        axioms_counts = [j for i, j in gp.groups.keys()]
 
-def adjust_lightness(color, amount=0.5):
-    c = color if color not in mc.cnames.keys() else mc.cnames[color]
-    c = colorsys.rgb_to_hls(*mc.to_rgb(c))
-    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+        means = gp.mean()
+        stdevs = gp.std()
 
+        plt.rcParams.update({'font.size': 16})
+        fig, ax1 = plt.subplots()
+        ax1.set_xlabel('m/n')
+        # ax1.set_title('PGEL-SAT: SAT proportion and time')
 
-def plot_subgraph(ax, data, label, color, light=1):
-    ax.set_ylabel(label, color=color)
-    ax.plot(data, color=adjust_lightness(color, light))
+        sats_mean = means.get('SAT proportion').values
+        sats_stdev = stdevs.get('SAT proportion').values
 
+        ax1.set_ylabel('%PGEL-SAT', color='b')
+        ax1.plot(axioms_counts, sats_mean, color='b')
+        ax1.fill_between(axioms_counts,
+                         sats_mean - sats_stdev / 2,
+                         sats_mean + sats_stdev / 2,
+                         alpha=0.2, color='b')
 
-def multiplot_subgraph(ax, datas, label, color):
-    light = 0.2
-    light_factor = 2 / len(datas)
-    for data in datas:
-        plot_subgraph(ax, data, label, color, light=light)
-        light += light_factor
+        ax2 = ax1.twinx()
 
+        times_mean = means.get('Time').values
+        times_stdev = stdevs.get('Time').values
 
-def multiplot_graph(datas, label, color='tab:red'):
-    fig, ax = plt.subplots()
-    plot_subgraph(ax, datas, label, color)
-    fig.tight_layout()
-    plt.show()
+        ax2.set_ylabel('time (s)', color='r')
+        ax2.plot(axioms_counts, times_mean, color='r', ls='--')
+        ax2.fill_between(axioms_counts,
+                         times_mean - times_stdev / 2,
+                         times_mean + times_stdev / 2,
+                         alpha=0.2, color='r')
 
-
-def multiplot_graphs(satisfatibility_proportions, mean_elapsed_times):
-    fig, ax1 = plt.subplots()
-
-    ax1.set_xlabel('number of axioms')
-    multiplot_subgraph(
-        ax1,
-        satisfatibility_proportions,
-        'satisfatibility proportion',
-        'tab:red')
-
-    ax2 = ax1.twinx()
-    multiplot_subgraph(
-        ax2,
-        mean_elapsed_times,
-        'time (s)',
-        'tab:blue')
-
-    fig.tight_layout()
-    plt.show()
+        fig.tight_layout()
+        plt.show()

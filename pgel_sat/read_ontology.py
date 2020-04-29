@@ -85,7 +85,8 @@ def parse(file):
                     basic_concepts)]
 
     def is_thing_comment(triple):
-        return triple[0] == owl.Thing.storid and triple[1] == owl.comment.storid
+        return triple[0] == owl.Thing.storid \
+            and triple[1] == owl.comment.storid
 
     thing_comments = [triple for triple in onto.get_triples()
                       if is_thing_comment(triple)]

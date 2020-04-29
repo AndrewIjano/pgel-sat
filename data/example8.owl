@@ -1,73 +1,14 @@
 <?xml version="1.0"?>
-<rdf:RDF xmlns="urn:absolute:teste07#"
-     xml:base="urn:absolute:teste07"
+<rdf:RDF xmlns=""
      xmlns:owl="http://www.w3.org/2002/07/owl#"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:obda="https://w3id.org/obda/vocabulary#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:teste07="urn:absolute:teste07#"
      xmlns:untitled-ontology-23="http://www.semanticweb.org/andrew/ontologies/2019/10/untitled-ontology-23#">
-    <owl:Ontology rdf:about="urn:absolute:teste07"/>
-    
-
-
-    <!-- 
-    ///////////////////////////////////////////////////////////////////////////////////////
-    //
-    // Annotation properties
-    //
-    ///////////////////////////////////////////////////////////////////////////////////////
-     -->
-
-    
-
-
-    <!-- urn:absolute:teste07#axiom-probability-id -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#axiom-probability-id"/>
-    
-
-
-    <!-- urn:absolute:teste07#axiom-probability-restriction -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#axiom-probability-restriction"/>
-    
-
-
-    <!-- urn:absolute:teste07#axiom-probability-restrictions -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#axiom-probability-restrictions"/>
-    
-
-
-    <!-- urn:absolute:teste07#coefficient -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#coefficient"/>
-    
-
-
-    <!-- urn:absolute:teste07#probability-restriction -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#probability-restriction"/>
-    
-
-
-    <!-- urn:absolute:teste07#rhs -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#rhs"/>
-    
-
-
-    <!-- urn:absolute:teste07#type -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#type"/>
-    
-
-
-    <!-- urn:absolute:teste07#value -->
-
-    <owl:AnnotationProperty rdf:about="urn:absolute:teste07#value"/>
+    <owl:Ontology/>
     
 
 
@@ -116,49 +57,11 @@
     
 
 
-    <!-- http://www.w3.org/2002/07/owl#Nothing -->
-
-    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Nothing">
-        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
-    </rdf:Description>
-    <owl:Axiom>
-        <owl:annotatedSource rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
-        <owl:annotatedProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#subClassOf"/>
-        <owl:annotatedTarget rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
-        <probability-restriction>0 -1
-1 1
-=
-0.05</probability-restriction>
-        <probability-restriction>2 1
-=
-0.7</probability-restriction>
-    </owl:Axiom>
-    
-
-
-    <!-- http://www.w3.org/2002/07/owl#Thing -->
-
-    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
-        <rdfs:comment>#! pbox-restriction
-0 -1
-1 1
-=
-0.05</rdfs:comment>
-        <rdfs:comment>#! pbox-restriction
-2 1
-=
-0.7</rdfs:comment>
-    </rdf:Description>
-    
-
-
     <!-- urn:absolute:teste07#Dengue -->
 
     <owl:Class rdf:about="urn:absolute:teste07#Dengue">
         <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
         <rdfs:subClassOf rdf:resource="urn:absolute:teste07#Disease"/>
-        <rdfs:comment>lalalala</rdfs:comment>
-        <axiom-probability-id>banana</axiom-probability-id>
     </owl:Class>
     <owl:Axiom>
         <owl:annotatedSource rdf:resource="urn:absolute:teste07#Dengue"/>
@@ -166,7 +69,6 @@
         <owl:annotatedTarget rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
         <rdfs:comment>#! pbox-id
 2</rdfs:comment>
-        <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">2</axiom-probability-id>
     </owl:Axiom>
     
 
@@ -212,7 +114,6 @@
         </owl:annotatedTarget>
         <rdfs:comment>#! pbox-id
 0</rdfs:comment>
-        <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">0</axiom-probability-id>
     </owl:Axiom>
     
 
@@ -239,7 +140,6 @@
         </owl:annotatedTarget>
         <rdfs:comment>#! pbox-id
 1</rdfs:comment>
-        <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">1</axiom-probability-id>
     </owl:Axiom>
     
 
@@ -285,7 +185,7 @@
 
     <owl:NamedIndividual rdf:about="urn:absolute:teste07#john">
         <rdf:type rdf:resource="urn:absolute:teste07#Patient"/>
-        <hasSymptom rdf:resource="urn:absolute:teste07#s1"/>
+        <teste07:hasSymptom rdf:resource="urn:absolute:teste07#s1"/>
     </owl:NamedIndividual>
     
 
@@ -295,61 +195,27 @@
     <owl:NamedIndividual rdf:about="urn:absolute:teste07#s1">
         <rdf:type rdf:resource="urn:absolute:teste07#FeverAndRash"/>
     </owl:NamedIndividual>
-    <rdf:Description>
-        <axiom-probability-restrictions>
-            <rdf:Description>
-                <axiom-probability-restriction>
-                    <rdf:Description>
-                        <axiom-probability-id>
-                            <rdf:Description>
-                                <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">2</axiom-probability-id>
-                                <coefficient rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</coefficient>
-                            </rdf:Description>
-                        </axiom-probability-id>
-                    </rdf:Description>
-                </axiom-probability-restriction>
-                <axiom-probability-restriction>
-                    <rdf:Description>
-                        <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">1</axiom-probability-id>
-                        <coefficient rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</coefficient>
-                    </rdf:Description>
-                </axiom-probability-restriction>
-            </rdf:Description>
-        </axiom-probability-restrictions>
-        <rhs>
-            <rdf:Description>
-                <type rdf:datatype="http://www.w3.org/2001/XMLSchema#string">=</type>
-                <value rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.4</value>
-            </rdf:Description>
-        </rhs>
-    </rdf:Description>
-    <rdf:Description>
-        <axiom-probability-restrictions>
-            <rdf:Description>
-                <axiom-probability-restriction>
-                    <rdf:Description>
-                        <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">2</axiom-probability-id>
-                        <coefficient rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</coefficient>
-                    </rdf:Description>
-                </axiom-probability-restriction>
-                <axiom-probability-restriction>
-                    <rdf:Description>
-                        <axiom-probability-id rdf:datatype="http://www.w3.org/2001/XMLSchema#unsignedInt">1</axiom-probability-id>
-                        <coefficient rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</coefficient>
-                    </rdf:Description>
-                </axiom-probability-restriction>
-            </rdf:Description>
-        </axiom-probability-restrictions>
-        <rhs>
-            <rdf:Description>
-                <type rdf:datatype="http://www.w3.org/2001/XMLSchema#string">=</type>
-                <value rdf:datatype="http://www.w3.org/2001/XMLSchema#double">0.7</value>
-            </rdf:Description>
-        </rhs>
-    </rdf:Description>
-    <rdf:Description>
-        <coefficient rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-1</coefficient>
-        <coefficient rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-2</coefficient>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotations
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
+        <rdfs:comment>#! pbox-restriction
+2 1
+=
+0.7</rdfs:comment>
+        <rdfs:comment>#! pbox-restriction
+0 -1
+1 1
+=
+0.05</rdfs:comment>
     </rdf:Description>
 </rdf:RDF>
 

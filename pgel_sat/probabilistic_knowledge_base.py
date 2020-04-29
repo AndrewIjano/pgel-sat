@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 from random import randrange
-import read_ontology
+from . import read_ontology
 
 
 class ProbabilisticKnowledgeBase:
