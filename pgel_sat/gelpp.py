@@ -28,6 +28,7 @@ class Graph():
     def __init__(self, **kwargs):
         self.INIT = Graph.Concept('init', 'init', 0, False, False, [])
         self.ISA = Graph.Role('isa', 'isa', 0)
+        self.INF_ROLE = Graph.Role('infinity', 'infinity', 1)
 
         self.PBOX_ID_HEADER = '#!pbox-id'
         self.PBOX_RESTRICTION_HEADER = '#!pbox-restriction'
@@ -47,8 +48,8 @@ class Graph():
         self.role_inc_duo = [[]]
         self.role_inc_tri = {}
 
-        self.concept_idxs = {self.INIT.name: 0}
-        self.role_idxs = {self.ISA.name: 0}
+        self.concept_idxs = {c.name: c.index for c in self.concepts}
+        self.role_idxs = {r.name: r.index for r in self.roles}
 
         self.get_concept = lambda c: self.concept_idxs[str(
             c)] if str(c) in self.concept_idxs else -1
@@ -309,6 +310,7 @@ class Graph():
             i, e = self.concepts[ri_e].artificial_node_data
             for c in sub_concepts_with_role(i, e):
                 for d in self.sup_concepts(ri_e):
+                    self.__add_axiom(e, ri_e, self.INF_ROLE.index)
                     yield c, d
 
         def complete_rule_5():

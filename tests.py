@@ -1,71 +1,34 @@
-import time
-import numpy as np
-import pandas as pd
-import pgel_sat
+from pgel_sat import ProbabilisticKnowledgeBase, solve
 
 
-def test_pgel_satisfatibility(
-        concepts_count, axioms_count, prob_axioms_count=0, test_count=500):
-    def random_knowledge_bases():
-        for _ in range(test_count):
-            yield pgel_sat.ProbabilisticKnowledgeBase.random(
-                concepts_count, axioms_count, prob_axioms_count)
+def test_example8_is_correct():
+    goal_is_satisfiable = True
+    goal_lp_solution_x = [
+        2.971849718984097e-10,
+        2.611870272454962e-10,
+        2.7347816755261047e-10,
+        4.2675808097907373e-10,
+        5.715521528916973e-10,
+        9.996262660145507e-10,
+        0.2500000002875222,
+        0.2999999999836768,
+        0.6999999996742742,
+        0.2500000001132499,
+        0.6999999995237088,
+        0.04999999985506553]
+    goal_lp_solution_y = [7.143976405699169e-09, -5.589433348852922e-09,
+                          2.0697207378104556e-09, -5.9652571468327445e-09,
+                          2.0424164559293503e-09, -2.148781755390826e-09]
+    goal_lp_solution_cost = 2.829786666581838e-09
 
-    sat_and_time_results = np.empty((test_count, 2))
-    for idx, kb in enumerate(random_knowledge_bases()):
-        sat, time = pgel_sat_is_satisfiable(kb)
-        sat_and_time_results[idx, 0] = sat
-        sat_and_time_results[idx, 1] = time
-
-    return np.mean(sat_and_time_results, axis=0)
-
-
-def track_time(function):
-    def wrap(*args):
-        start = time.time()
-        result = function(*args)
-        end = time.time()
-        return result, end - start
-    return wrap
-
-
-@track_time
-def pgel_sat_is_satisfiable(knowledge_base):
-    return pgel_sat.is_satisfiable(knowledge_base)
-
-
-def get_datas_by_cols(datas):
-    datas_by_cols = [[] for _ in datas[0]]
-    for data in datas:
-        for idx, item in enumerate(data):
-            datas_by_cols[idx] += [item]
-    return datas_by_cols
+    kb = ProbabilisticKnowledgeBase.from_file('data/example8.owl')
+    result = solve(kb)
+    assert result['satisfiable'] == goal_is_satisfiable
+    assert result['lp']['x'] == goal_lp_solution_x
+    assert result['lp']['y'] == goal_lp_solution_y
+    assert result['lp']['cost'] == goal_lp_solution_cost
 
 
 if __name__ == '__main__':
-    concepts_count = 40
-    axioms_counts = range(1, 200, 1)
-    prob_axioms_counts = [10]
-
-    data_set = []
-    for i, axioms_count in enumerate(axioms_counts):
-        print('axioms:', i, end=' ')
-        start_time = time.time()
-        sats_and_times_mean = np.empty((len(prob_axioms_counts), 3))
-        for j, prob_axioms_count in enumerate(prob_axioms_counts):
-            sat_mean, time_mean = test_pgel_satisfatibility(
-                concepts_count, axioms_count, prob_axioms_count)
-            data_set += [(concepts_count, axioms_count / concepts_count,
-                          prob_axioms_count, sat_mean, time_mean)]
-        print(time.time() - start_time)
-
-    df = pd.DataFrame(
-        data=data_set,
-        columns=[
-            'Concepts count',
-            'Axioms count',
-            'Probability axioms count',
-            'SAT proportion',
-            'Time'])
-
-    df.to_csv('data2.csv', index=False)
+    test_example8_is_correct()
+    print('all tests passed!')
