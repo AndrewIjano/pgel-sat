@@ -40,19 +40,11 @@ class ProbabilisticKnowledgeBase:
     def from_file(cls, file):
         kb = cls()
         onto = read_ontology.parse(file)
-        kb.concepts = onto['concepts']
-        kb.roles = onto['roles']
 
-        for ci in onto['concept_inclusions']:
-            kb.add_concept_inclusion(
-                sub_concept=ci[0],
-                super_concept=ci[1],
-                role=ci[2],
-                prob_axiom_index=ci[3]
-            )
+        kb.graph = onto['graph']
+        kb.graph.complete()
 
         b = []
-
         rows = []
         cols = []
         data = []

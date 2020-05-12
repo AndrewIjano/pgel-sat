@@ -12,6 +12,9 @@ def is_satisfiable(kb):
 
 
 def solve(kb):
+    if kb.graph.is_there_path_init_bot():
+        {'satisfiable': False}
+
     C = initialize_C(kb)
     c = initialize_c(kb)
     d = initialize_d(kb)

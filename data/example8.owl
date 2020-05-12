@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
-<rdf:RDF xmlns=""
+<rdf:RDF xmlns="urn:absolute:teste07#"
+     xml:base="urn:absolute:teste07"
      xmlns:owl="http://www.w3.org/2002/07/owl#"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:obda="https://w3id.org/obda/vocabulary#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-     xmlns:teste07="urn:absolute:teste07#"
      xmlns:untitled-ontology-23="http://www.semanticweb.org/andrew/ontologies/2019/10/untitled-ontology-23#">
-    <owl:Ontology/>
+    <owl:Ontology rdf:about="urn:absolute:teste07"/>
     
 
 
@@ -35,6 +35,31 @@
     
 
 
+    <!-- urn:absolute:teste07#isFatherOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:teste07#isFatherOf">
+        <rdfs:subPropertyOf rdf:resource="urn:absolute:teste07#isParentOf"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- urn:absolute:teste07#isGrandfatherOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:teste07#isGrandfatherOf">
+        <owl:propertyChainAxiom rdf:parseType="Collection">
+            <rdf:Description rdf:about="urn:absolute:teste07#isFatherOf"/>
+            <rdf:Description rdf:about="urn:absolute:teste07#isFatherOf"/>
+        </owl:propertyChainAxiom>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- urn:absolute:teste07#isParentOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:teste07#isParentOf"/>
+    
+
+
     <!-- urn:absolute:teste07#suspectOf -->
 
     <owl:ObjectProperty rdf:about="urn:absolute:teste07#suspectOf">
@@ -57,6 +82,30 @@
     
 
 
+    <!-- http://www.w3.org/2002/07/owl#Nothing -->
+
+    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Nothing">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    </rdf:Description>
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#Thing -->
+
+    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
+        <rdfs:comment>#!pbox-restriction
+0 -1
+1 1
+=
+0.05</rdfs:comment>
+        <rdfs:comment>#!pbox-restriction
+2 1
+=
+0.7</rdfs:comment>
+    </rdf:Description>
+    
+
+
     <!-- urn:absolute:teste07#Dengue -->
 
     <owl:Class rdf:about="urn:absolute:teste07#Dengue">
@@ -67,8 +116,7 @@
         <owl:annotatedSource rdf:resource="urn:absolute:teste07#Dengue"/>
         <owl:annotatedProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#subClassOf"/>
         <owl:annotatedTarget rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
-        <rdfs:comment>#! pbox-id
-2</rdfs:comment>
+        <rdfs:comment>#!pbox-id 2</rdfs:comment>
     </owl:Axiom>
     
 
@@ -112,8 +160,7 @@
                 <owl:someValuesFrom rdf:resource="urn:absolute:teste07#Dengue"/>
             </owl:Restriction>
         </owl:annotatedTarget>
-        <rdfs:comment>#! pbox-id
-0</rdfs:comment>
+        <rdfs:comment>#!pbox-id 0</rdfs:comment>
     </owl:Axiom>
     
 
@@ -138,8 +185,7 @@
                 <owl:someValuesFrom rdf:resource="urn:absolute:teste07#Dengue"/>
             </owl:Restriction>
         </owl:annotatedTarget>
-        <rdfs:comment>#! pbox-id
-1</rdfs:comment>
+        <rdfs:comment>#!pbox-id 1</rdfs:comment>
     </owl:Axiom>
     
 
@@ -185,7 +231,7 @@
 
     <owl:NamedIndividual rdf:about="urn:absolute:teste07#john">
         <rdf:type rdf:resource="urn:absolute:teste07#Patient"/>
-        <teste07:hasSymptom rdf:resource="urn:absolute:teste07#s1"/>
+        <hasSymptom rdf:resource="urn:absolute:teste07#s1"/>
     </owl:NamedIndividual>
     
 
@@ -195,28 +241,6 @@
     <owl:NamedIndividual rdf:about="urn:absolute:teste07#s1">
         <rdf:type rdf:resource="urn:absolute:teste07#FeverAndRash"/>
     </owl:NamedIndividual>
-    
-
-
-    <!-- 
-    ///////////////////////////////////////////////////////////////////////////////////////
-    //
-    // Annotations
-    //
-    ///////////////////////////////////////////////////////////////////////////////////////
-     -->
-
-    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
-        <rdfs:comment>#! pbox-restriction
-2 1
-=
-0.7</rdfs:comment>
-        <rdfs:comment>#! pbox-restriction
-0 -1
-1 1
-=
-0.05</rdfs:comment>
-    </rdf:Description>
 </rdf:RDF>
 
 
