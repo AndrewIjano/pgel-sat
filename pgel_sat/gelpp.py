@@ -1,341 +1,286 @@
-from collections import namedtuple
-import owlready2 as owl
+class Concept:
+    def __init__(self, iri):
+        self.iri = iri
+        self.sup_arrows = []
+        self.sub_arrows = []
+        self._is_empty = False
+        self.reaches = {self}
+
+    def has_arrow(self, arrow):
+        return arrow in self.sup_arrows
+
+    def add_arrow(self, sup_arrow):
+        sup_concept = sup_arrow.concept
+        sub_arrow = sup_arrow.copy_from(self)
+        if not self.has_arrow(sup_arrow):
+            self.sup_arrows += [sup_arrow]
+            sup_concept.sub_arrows += [sub_arrow]
+
+    def is_a(self):
+        return (a.concept for a in self.sup_arrows
+                if isinstance(a.role, IsA) and a.pbox_id < 0)
+
+    def sup_concepts(self, role=None):
+        return (a.concept for a in self.sup_arrows
+                if role is not None and a.role == role)
+
+    def sup_concepts_with_roles(self, without=None):
+        return ((a.concept, a.role) for a in self.sup_arrows
+                if a.role != without)
+
+    def sub_concepts(self, role=None):
+        return (a.concept for a in self.sub_arrows
+                if role is not None and a.role == role)
+
+    def sub_concepts_with_roles(self, without=None):
+        return ((a.concept, a.role) for a in self.sub_arrows
+                if a.role != without)
+
+    def is_empty(self):
+        visited = set()
+
+        def _is_empty(concept):
+            if concept._is_empty:
+                return True
+            visited.add(concept)
+            reached = False
+            for sup_concept in concept.is_a():
+                if sup_concept not in visited:
+                    reached = reached or _is_empty(sup_concept)
+            concept._is_empty = reached
+        return _is_empty(self)
+
+    def sup_concepts_reached(self, role=None):
+        visited = set()
+
+        def _sup_concepts_reached(concept):
+            visited.add(concept)
+            yield concept
+            for sup_concept in concept.sup_concepts(role=role):
+                if sup_concept not in visited:
+                    yield from _sup_concepts_reached(sup_concept)
+
+        yield from _sup_concepts_reached(self)
+
+    def sub_concepts_reach(self, role=None):
+        visited = set()
+
+        def _sub_concepts_reached(concept):
+            visited.add(concept)
+            yield concept
+            for sub_concept in concept.sub_concepts(role=role):
+                if sub_concept not in visited:
+                    yield from _sub_concepts_reached(sub_concept)
+
+        yield from _sub_concepts_reached(self)
+
+
+class EmptyConcept(Concept):
+    def __init__(self, iri):
+        super().__init__(iri)
+        self._is_empty = True
+
+
+class IndividualConcept(Concept):
+    def __init__(self, iri):
+        super().__init__(iri)
+
+
+class ExistentialConcept(Concept):
+    def __init__(self, role_iri, concept_iri):
+        self.concept_iri = concept_iri
+        self.role_iri = role_iri
+        super().__init__(f'{role_iri}.{concept_iri}')
+
+
+class Arrow():
+    def __init__(self, concept, role, pbox_id=-1, is_derivated=False):
+        self.concept = concept
+        self.role = role
+        self.pbox_id = pbox_id
+        self.is_derivated = is_derivated
+
+    def copy_from(self, concept):
+        return Arrow(concept, self.role, self.pbox_id, self.is_derivated)
+
+    def __eq__(self, other):
+        if not isinstance(other, Arrow):
+            return NotImplemented
+
+        return (self.concept == other.concept and
+                self.role == other.role and
+                self.pbox_id == other.pbox_id and
+                self.is_derivated == other.is_derivated)
+
+
+class Role():
+    def __init__(self, iri):
+        self.iri = iri
+        self.axioms = []
+
+    def add_axiom(self, sub_concept, sup_concept):
+        self.axioms += [(sub_concept, sup_concept)]
+
+
+class IsA(Role):
+    def __init__(self):
+        super().__init__('is a')
 
 
 class Graph():
-    Concept = namedtuple(
-        'Concept',
-        ['iri',
-         'name',
-         'index',
-         'is_artificial',
-         'is_individual',
-         'artificial_node_data'])
+    def __init__(self, empty_concept_iri, general_concept_iri):
+        self.init = Concept('init')
+        self.bot = EmptyConcept(empty_concept_iri)
+        self.top = Concept(general_concept_iri)
 
-    Role = namedtuple(
-        'Role',
-        ['iri',
-         'name',
-         'index'])
+        self.is_a = IsA()
+        self.infinity = Role('∞')
 
-    Arrow = namedtuple(
-        'Arrow',
-        ['concept',
-         'role',
-         'pbox_id',
-         'is_derivated'])
+        self.concepts = {c.iri: c for c in [self.init, self.bot, self.top]}
+        self.roles = {r.iri: r for r in [self.is_a, self.infinity]}
+        self.role_inclusions = {}
 
-    def __init__(self, **kwargs):
-        self.INIT = Graph.Concept('init', 'init', 0, False, False, [])
-        self.ISA = Graph.Role('isa', 'isa', 0)
-        self.INF_ROLE = Graph.Role('infinity', 'infinity', 1)
+        self.init.add_arrow(Arrow(self.top, self.is_a))
 
-        self.PBOX_ID_HEADER = '#!pbox-id'
-        self.PBOX_RESTRICTION_HEADER = '#!pbox-restriction'
-        self.concepts = [self.INIT]
-        self.axioms = [[]]
+    def has_path_init_to_bot(self):
+        return self.init.is_empty()
 
-        self.axioms_rev = [[]]
-        self.artificials = []
-        self.individuals = []
-        self.axioms_isa = []
-        self.axioms_by_role = [[]]
-        self.is_a_bot = [False]
+    def add_concept(self, concept):
+        self.concepts[concept.iri] = concept
 
-        self.roles = [self.ISA]
-        self.role_inclusions = []
+        if isinstance(concept, IndividualConcept):
+            self.init.add_arrow(Arrow(concept, self.is_a))
 
-        self.role_inc_duo = [[]]
-        self.role_inc_tri = {}
+    def get_concept(self, concept_iri):
+        return self.concepts[concept_iri]
+    
+    def get_concepts(self):
+        return list(self.concepts.values())
 
-        self.concept_idxs = {c.name: c.index for c in self.concepts}
-        self.role_idxs = {r.name: r.index for r in self.roles}
+    def add_role(self, role):
+        self.roles[role.iri] = role
 
-        self.get_concept = lambda c: self.concept_idxs[str(
-            c)] if str(c) in self.concept_idxs else -1
-        self.get_role = lambda c: self.role_idxs[str(type(c.property()))]
-        self.get_role_idx = lambda r: self.role_idxs[str(r)]
-        self.get_value = lambda c: self.concept_idxs[str(type(c.value()))]
+    def get_role(self, role_iri):
+        return self.roles[role_iri]
 
-        self.is_existencial = lambda c: isinstance(
-            c, owl.class_construct.Restriction)
-        self.owl_isa = owl.rdfs_subclassof
+    def get_roles(self):
+        return list(self.roles.values())
 
-    def is_there_path_init_bot(self):
-        return self.is_a_bot[0]
+    def add_chained_role_inclusion(self, sub_roles_iri, sup_role_iri):
+        sub_role1 = self.get_role(sub_roles_iri[0])
+        sub_role2 = self.get_role(sub_roles_iri[1])
+        sup_role = self.get_role(sup_role_iri)
 
-    def add_concept(self, owl_concept, is_artificial=False,
-                    is_individual=False):
-        artificial_node_data = []
+        sup_roles = self.role_inclusions.get(sub_roles_iri, [])
+        sup_roles += [sup_role]
+        self.role_inclusions[sub_roles_iri] = sup_roles
+        self.check_new_derivations_from_chained_role_inclusions(
+            sub_role1, sub_role2, sup_role)
 
-        index = len(self.concepts)
-        self.concept_idxs[str(owl_concept)] = index
+    def check_new_derivations_from_chained_role_inclusions(
+            self, sub_role1, sub_role2, sup_role):
+        for c, d_prime in sub_role1.axioms():
+            for d in d_prime.sup_concepts(sub_role2):
+                self.add_axiom(c.iri, d.iri, sup_role.iri, is_derivated=True)
 
-        iri = str(owl_concept)
-        name = str(owl_concept)
-        if not is_artificial:
-            iri = owl_concept.iri
-            name = owl_concept.name
+    def add_role_inclusion(self, sub_role_iri, sup_role_iri):
+        sub_role = self.get_role(sub_role_iri)
+        sup_role = self.get_role(sup_role_iri)
 
-        if is_artificial:
-            role = self.get_role(owl_concept)
-            conc = self.get_value(owl_concept)
-            artificial_node_data = [role, conc]
-            self.artificials += [index]
+        sup_roles = self.role_inclusions.get(sub_role_iri, [])
+        sup_roles += [sup_role]
+        self.role_inclusions[sub_role_iri] = sup_roles
+        self.check_new_derivations_from_role_inclusions(sub_role, sup_role)
 
-        if is_individual:
-            self.individuals += [index]
+    def check_new_derivations_from_role_inclusions(self, sub_role, sup_role):
+        for c, d in sub_role.axioms():
+            self.add_axiom(c, d, sup_role, is_derivated=True)
 
-        self.is_a_bot += [index == 1]
+    def add_axiom(self, sub_concept, sup_concept, role,
+                  pbox_id=-1, is_derivated=False):
+        if not isinstance(sub_concept, Concept):
+            sub_concept = self.get_concept(sub_concept)
+        if not isinstance(sup_concept, Concept):
+            sup_concept = self.get_concept(sup_concept)
+        if not isinstance(role, Role):
+            role = self.get_role(role)
 
-        concept = Graph.Concept(
-            iri=iri,
-            name=name,
-            index=index,
-            artificial_node_data=artificial_node_data,
-            is_artificial=is_artificial,
-            is_individual=is_individual,
-        )
-        self.concepts += [concept]
-        self.axioms += [[]]
-        self.axioms_rev += [[]]
+        arrow = Arrow(sup_concept, role, pbox_id, is_derivated)
+        if not sub_concept.has_arrow(arrow):
+            sub_concept.add_arrow(arrow)
 
-    def add_concepts(self, owl_concepts, is_artificial=False,
-                     is_individual=False):
-        for owl_concept in owl_concepts:
-            self.add_concept(owl_concept, is_artificial, is_individual)
+            axiom = (sub_concept, sup_concept, role)
+            self.check_new_derivations_from_axioms(axiom)
+            self.check_new_paths_to_bot(axiom)
+            self.check_new_derivations_from_axioms_and_roles(axiom)
+            return True
+        return False
 
-    def add_role(self, owl_role):
-        index = len(self.roles)
-        role = Graph.Role(
-            iri=owl_role.iri,
-            name=owl_role.name,
-            index=index
-        )
-        self.role_idxs[str(owl_role)] = index
-        self.roles += [role]
-        self.role_inc_duo += [[]]
-        self.axioms_by_role += [[]]
+    def check_new_derivations_from_axioms(self, axiom):
+        sub_concept, sup_concept, role = axiom
+        if role == self.is_a:
+            for c, i in sup_concept.sup_concepts_with_roles(without=self.is_a):
+                self.add_axiom(sup_concept, c, i, is_derivated=True)
+            return
+        for c in sub_concept.sub_concepts(role=self.is_a):
+            self.add_axiom(c, sub_concept, role, is_derivated=True)
 
-    def add_roles(self, owl_roles):
-        for owl_role in owl_roles:
-            self.add_role(owl_role)
+    def check_new_paths_to_bot(self, axiom):
+        sub_concept, sup_concept, role = axiom
+        if sup_concept.is_empty() and role != self.is_a:
+            sub_concept._is_empty = True
+            is_a = self.is_a
+            self.add_axiom(sub_concept, sup_concept, is_a, is_derivated=True)
 
-    def add_axioms_from_concepts(self, owl_concepts):
-        for sub_concept in owl_concepts:
-            if sub_concept == owl.Nothing:
-                continue
-            for sup_concept in sub_concept.is_a:
-                self.add_axiom(sub_concept, sup_concept)
-            for sup_concept in sub_concept.equivalent_to:
-                self.add_axiom(sub_concept, sup_concept)
-                self.add_axiom(sup_concept, sub_concept)
+    def check_new_derivations_from_axioms_and_roles(self, axiom):
+        sub_concept, sup_concept, role = axiom
+        for sup_role in self.role_inclusions.get(role.iri, []):
+            self.add_axiom(sub_concept, sup_concept, role, is_derivated=True)
 
-    def add_axiom(self, owl_sub_concept, owl_sup_concept):
-        sub_concept = self.get_concept(owl_sub_concept)
-        sup_concept = self.get_concept(owl_sup_concept)
-        role = 0
+        for d, j in sup_concept.sub_concepts_with_roles(without=self.is_a):
+            for k in self.role_inclusions.get((role.iri, j.iri), []):
+                self.add_axiom(sub_concept, d, k, is_derivated=True)
 
-        if self.is_existencial(owl_sub_concept):
-            self.add_concept(owl_sub_concept, is_artificial=True)
-            sub_concept = self.concept_idxs[str(owl_sub_concept)]
+    def existential_concepts(self):
+        return (concept for concept in self.concepts.values()
+                if isinstance(concept, ExistentialConcept))
 
-        if self.is_existencial(owl_sup_concept):
-            role = self.get_role(owl_sup_concept)
-            sup_concept = self.get_value(owl_sup_concept)
-
-        pbox_id = self.get_pbox_id(owl_sub_concept, owl_sup_concept)
-        self.__add_axiom(sub_concept, sup_concept, role, pbox_id)
-
-    def __add_axiom(self, sub_concept, sup_concept, role=0,
-                    pbox_id=-1, is_derivated=False):
-        new_arrow = Graph.Arrow(sup_concept, role, pbox_id, is_derivated)
-        rev_arrow = Graph.Arrow(sub_concept, role, pbox_id, is_derivated)
-        if new_arrow in self.axioms[sub_concept]:
-            return False
-
-        # GC4
-        if role == 0:
-            for c, i in self.sup_concepts_role(sup_concept):
-                self.__add_axiom(sup_concept, c, i, is_derivated=True)
-        else:
-            for c in self.sub_concepts(sub_concept):
-                self.__add_axiom(c, sub_concept, role, is_derivated=True)
-
-        # GC6
-        if self.is_there_path_to_bot(sup_concept) and role != 0:
-            self.is_a_bot[sub_concept] = True
-            self.__add_axiom(sub_concept, sup_concept, is_derivated=True)
-
-        # GC8
-        for sup_role in self.role_inc_duo[role]:
-            self.__add_axiom(
-                sub_concept,
-                sup_concept,
-                sup_role,
-                is_derivated=True)
-
-        # GC9
-        for d, j in self.sup_concepts_role(sup_concept):
-            for k in self.role_inc_tri.get((role, j), []):
-                self.__add_axiom(sub_concept, d, k, is_derivated=True)
-
-        self.axioms_by_role[role] += [(sub_concept, sup_concept)]
-
-        self.axioms[sub_concept] += [new_arrow]
-        self.axioms_rev[sup_concept] += [rev_arrow]
-        return True
-
-    def add_role_inclusions_from_roles(self, owl_roles):
-        for owl_sup_role in owl_roles:
-            for owl_sub_role in owl_sup_role.get_property_chain():
-                self.add_role_inclusion(owl_sub_role, owl_sup_role)
-            for owl_sub_role in owl_sup_role.subclasses():
-                self.add_role_inclusion(owl_sub_role, owl_sup_role)
-
-    def add_role_inclusion(self, owl_sub_role, owl_sup_role):
-        sup_role = self.get_role_idx(owl_sup_role)
-        if isinstance(owl_sub_role, owl.PropertyChain):
-            sub_role1, sub_role2 = map(
-                self.get_role_idx, owl_sub_role.properties)
-
-            sup_roles = self.role_inc_tri.get((sub_role1, sub_role2), [])
-            sup_roles += [sup_role]
-            self.role_inc_tri[sub_role1, sub_role2] = sup_roles
-
-            for c, d_prime in self.axioms_by_role[sub_role1]:
-                for d, j in self.sub_concepts_role(d_prime):
-                    if j == sub_role2:
-                        self.__add_axiom(c, d, sup_role, is_derivaated=True)
-        else:
-            sub_role = self.get_role_idx(owl_sub_role)
-
-            self.role_inc_duo[sub_role] += [sup_role]
-            for c, d in self.axioms_by_role[sub_role]:
-                self.__add_axiom(c, d, sup_role, is_derivated=True)
-
-    def link_to_init(self):
-        self.__add_axiom(0, 2)
-        for i in self.individuals:
-            self.__add_axiom(0, i)
-
-    def get_pbox_id(self, owl_sub_concept, owl_sup_concept):
-        if self.is_existencial(owl_sub_concept):
-            return -1
-        comments = owl.comment[owl_sub_concept, self.owl_isa, owl_sup_concept]
-        for comment in comments:
-            c = comment.split()
-            if len(c) > 1 and c[0] == self.PBOX_ID_HEADER:
-                return int(c[1])
-        return -1
-
-    def sup_concepts(self, c):
-        return self.sup_concepts_role_i(c, 0)
-
-    def sup_concepts_role(self, c):
-        return ((a.concept, a.role) for a in self.axioms[c] if a.role != 0)
-
-    def sup_concepts_role_i(self, c, i):
-        return (a.concept for a in self.axioms[c] if a.role == i)
-
-    def sub_concepts(self, d):
-        return (a.concept for a in self.axioms_rev[d] if a.role == 0)
-
-    def sub_concepts_role(self, d):
-        return ((a.concept, a.role)
-                for a in self.axioms_rev[d] if a.role != 0)
-
-    def is_there_path_to_bot(self, c):
-        def _is_there_path_to_bot(v, visited):
-            if self.is_a_bot[v]:
-                return True
-            visited[v] = True
-            reached = False
-            for a in self.axioms[v]:
-                c = a.concept
-                i = a.role
-                if not visited[c] and i == 0 and a.pbox_id < 0:
-                    reached = reached or _is_there_path_to_bot(c, visited)
-
-            self.is_a_bot[v] = reached
-            return reached
-        visited = [False] * len(self.concepts)
-        return _is_there_path_to_bot(0, visited)
+    def inidividuals(self):
+        return (concept for concept in self.concepts.values()
+                if isinstance(concept, IndividualConcept))
 
     def complete(self):
-        def sup_concepts_any_role(c):
-            return (a.concept for a in self.axioms[c])
-
-        def reaches_by_is_a(c):
-            def _reaches_by_is_a(d, v):
-                v[d] = True
-                yield d
-                for dd in self.sup_concepts(d):
-                    if not v[dd]:
-                        yield from _reaches_by_is_a(dd, v)
-
-            v = [False] * len(self.concepts)
-            yield from _reaches_by_is_a(c, v)
-
-        def reaches_by_is_a_rev(d):
-            def _reaches_by_is_a_rev(c, v):
-                v[c] = True
-                yield c
-                for cc in self.sub_concepts(c):
-                    if not v[cc]:
-                        yield from _reaches_by_is_a_rev(cc, v)
-
-            v = [False] * len(self.concepts)
-            yield from _reaches_by_is_a_rev(d, v)
-
-        def reaches(d):
-            def _reaches(c, v):
-                v[c] = True
-                yield c
-                for cc in sup_concepts_any_role(c):
-                    if not v[cc]:
-                        yield from _reaches(cc, v)
-
-            v = [False] * len(self.concepts)
-            yield from _reaches(d, v)
-
-        def sub_concepts_with_role(i, e):
-            for concept in self.concepts:
-                c = concept.index
-                for e_prime in self.sup_concepts_role_i(c, i):
-                    if e in reaches_by_is_a(e_prime):
-                        yield c
-
-        def concepts_connected_by_artificial(ri_e):
-            i, e = self.concepts[ri_e].artificial_node_data
-            for c in sub_concepts_with_role(i, e):
-                for d in self.sup_concepts(ri_e):
-                    self.__add_axiom(e, ri_e, self.INF_ROLE.index)
+        def concepts_connected_by_existential(ri_e):
+            i = self.get_role(ri_e.role_iri)
+            e = self.get_concept(ri_e.concept_iri)
+            for c in e.sub_concepts(role=i):
+                for d in ri_e.sup_concepts(role=self.is_a):
+                    self.add_axiom(e, ri_e, self.infinity)
                     yield c, d
 
         def complete_rule_5():
             ok = False
-            for ri_e in self.artificials:
-                for c, d in concepts_connected_by_artificial(ri_e):
-                    ok = ok or self.__add_axiom(c, d, is_derivated=True)
+            for ri_e in self.existential_concepts():
+                for c, d in concepts_connected_by_existential(ri_e):
+                    ok = ok or self.add_axiom(
+                        c, d, self.is_a, is_derivated=True)
             return ok
 
         def is_reached_by_init(c, d):
-            reached_by_init = reaches(self.INIT.index)
+            reached_by_init = self.init.sup_concepts_reached()
             return c in reached_by_init and d in reached_by_init
 
         def complete_rule_7():
             ok = False
-            for a in self.individuals:
-                for c in reaches_by_is_a_rev(a):
-                    for d in reaches_by_is_a_rev(a):
+            for a in self.inidividuals():
+                for c in a.sub_concepts_reach():
+                    for d in a.sub_concepts_reach():
                         if is_reached_by_init(c, d):
-                            ok = ok or self.__add_axiom(
-                                c, d, is_derivated=True)
+                            ok = ok or self.add_axiom(
+                                c, d, self.is_a, is_derivated=True)
             return ok
 
         ok = False
-
         while not ok:
             ok = True
             ok = ok and not complete_rule_5()

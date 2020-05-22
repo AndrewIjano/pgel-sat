@@ -1,30 +1,22 @@
 import numpy as np
 import scipy.sparse as sp
-from random import randrange
-from . import read_ontology
+import random
+from . import owl
+from . import gelpp
 
 
 class ProbabilisticKnowledgeBase:
-    class ConceptInclusion():
-        def __init__(self, **kwargs):
-            self.sub_concept = kwargs.setdefault('sub_concept', 0)
-            self.super_concept = kwargs.setdefault('super_concept', 0)
-            self.role = kwargs.setdefault('role', 0)
-            self.prob_axiom_index = kwargs.setdefault('prob_axiom_index', -1)
+    def __init__(self, graph, A, b, signs=[]):
+        self.graph = graph
+        self.A = A
+        self.b = b
+        self.signs = signs
 
-    def __init__(self):
-        self.init = 0
-        self.bottom = 1
+    def init(self):
+        return self.graph.init.iri
 
-        self.concepts = []
-        self.concept_inclusions = []
-
-        self.roles = []
-        self.role_inclusions = []
-
-        self.A = np.empty((0, 0))
-        self.signs = []
-        self.b = np.empty(0)
+    def bottom(self):
+        return self.graph.bot.iri
 
     def add_concept_inclusion(self, **kwargs):
         concept_inclusion = self.ConceptInclusion(**kwargs)
@@ -36,19 +28,17 @@ class ProbabilisticKnowledgeBase:
     def k(self):
         return self.A.shape[0]
 
+    def concepts(self):
+        return self.graph.concepts.values()
+
     @classmethod
     def from_file(cls, file):
-        kb = cls()
-        onto = read_ontology.parse(file)
-
-        kb.graph = onto['graph']
-        kb.graph.complete()
+        graph, pbox_restrictions = owl.parser.parse(file)
+        graph.complete()
 
         b = []
-        rows = []
-        cols = []
-        data = []
-        for row, pbox_restriction in enumerate(onto['pbox_restrictions']):
+        rows, cols, data = [], [], []
+        for row, pbox_restriction in enumerate(pbox_restrictions):
             axiom_restrictions, sign, value = pbox_restriction
             for axiom_restriction in axiom_restrictions:
                 col, coefficient = axiom_restriction
@@ -57,33 +47,36 @@ class ProbabilisticKnowledgeBase:
                 data += [coefficient]
             b += [value]
 
-        kb.A = sp.coo_matrix((data, (rows, cols))).todense()
-        kb.b = np.array(b)
-        return kb
+        A = sp.coo_matrix((data, (rows, cols))).todense()
+        b = np.array(b)
+        return cls(graph, A, b)
 
     @classmethod
     def random(cls, concepts_count, axioms_count, prob_axioms_count=0):
-        kb = cls()
-        kb.concepts = [str(i) for i in range(concepts_count)]
-        kb.roles = ['ISA', 'A']
+        graph = gelpp.Graph('bot', 'top')
+
+        for i in range(concepts_count):
+            graph.add_concept(gelpp.Concept(i))
+
+        graph.add_role(gelpp.Role('i'))
 
         for _ in range(axioms_count):
-            kb.add_concept_inclusion(
-                sub_concept=randrange(concepts_count),
-                super_concept=randrange(concepts_count),
-                role=randrange(2)
+            graph.add_axiom(
+                random.choice(graph.get_concepts().iri),
+                random.choice(graph.get_concepts().iri),
+                random.choice(graph.get_roles().iri)
             )
 
-        kb.A = np.zeros((prob_axioms_count, prob_axioms_count))
+        A = np.zeros((prob_axioms_count, prob_axioms_count))
         for i in range(prob_axioms_count):
-            kb.add_concept_inclusion(
-                sub_concept=randrange(concepts_count),
-                super_concept=randrange(concepts_count),
-                role=randrange(2),
-                prob_axiom_index=i
+            graph.add_axiom(
+                random.choice(graph.get_concepts()).iri,
+                random.choice(graph.get_concepts()).iri,
+                random.choice(graph.get_roles()).iri,
+                pbox_id=i
             )
-            kb.A[i, i] = 1
+            A[i, i] = 1
 
-        kb.b = np.random.random_sample(prob_axioms_count)
+        b = np.random.random_sample(prob_axioms_count)
 
-        return kb
+        return cls(graph, A, b)

@@ -12,7 +12,7 @@ def is_satisfiable(kb):
 
 
 def solve(kb):
-    if kb.graph.is_there_path_init_bot():
+    if kb.graph.has_path_init_to_bot():
         {'satisfiable': False}
 
     C = initialize_C(kb)

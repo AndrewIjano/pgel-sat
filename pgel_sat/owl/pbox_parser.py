@@ -1,34 +1,31 @@
 import owlready2 as owl
-from . import gelpp
-
-INIT = 'INIT'
-ISA = 'ISA'
 
 PBOX_ID_HEADER = '#!pbox-id'
 PBOX_RESTRICTION_HEADER = '#!pbox-restriction'
 
 
-def parse(file):
-    onto = owl.get_ontology(file)
-    onto.load()
-    classes = list(onto.classes())
-    individuals = list(onto.individuals())
+def get_id(owl_sub_concept, owl_sup_concept):
+    if is_existential(owl_sub_concept):
+        return -1
 
-    graph = gelpp.Graph()
+    comments = get_comments(owl_sub_concept, owl_sup_concept)
+    for comment in comments:
+        tokens = comment.split()
+        if len(tokens) > 1 and tokens[0] == PBOX_ID_HEADER:
+            return int(tokens[1])
+    return -1
 
-    graph.add_roles(onto.object_properties())
-    graph.add_role_inclusions_from_roles(onto.object_properties())
 
-    graph.add_concepts([owl.Nothing, owl.Thing])
-    graph.add_concepts(classes)
-    graph.add_concepts(individuals, is_individual=True)
+def is_existential(owl_concept):
+    return isinstance(owl_concept, owl.class_construct.Restriction)
 
-    graph.link_to_init()
 
-    graph.add_axioms_from_concepts([owl.Thing])
-    graph.add_axioms_from_concepts(classes)
-    graph.add_axioms_from_concepts(individuals)
+def get_comments(owl_sub_concept, owl_sup_concept):
+    owl_is_a = owl.rdfs_subclassof
+    return owl.comment[owl_sub_concept, owl_is_a, owl_sup_concept]
 
+
+def get_restrictions(onto):
     def is_thing_comment(triple):
         return triple[0] == owl.Thing.storid \
             and triple[1] == owl.comment.storid
@@ -61,11 +58,4 @@ def parse(file):
         pbox_restrictions += [(axiom_restrictions,
                                restriction_sign,
                                restriction_value)]
-    return {
-        'graph': graph,
-        'pbox_restrictions': pbox_restrictions
-    }
-
-
-if __name__ == '__main__':
-    parse('../data/example8.owl')
+    return pbox_restrictions

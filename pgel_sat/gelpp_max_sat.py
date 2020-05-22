@@ -107,18 +107,19 @@ class WeightedGraph:
             return f'({self.vertex}, {self.weight}, {self.prob_axiom_index})'
 
     def __init__(self, kb, weights):
-        self.adj = []
-        self.order = len(kb.graph.concepts)
+        indexes = {j.iri: i for i, j in enumerate(kb.concepts())}
+
+        self.order = len(kb.concepts())
         self.infinity = max(weights) + 1
 
-        self.init = kb.init
-        self.bottom = kb.bottom
+        self.init = indexes[kb.init()]
+        self.bottom = indexes[kb.bottom()]
         self.negative_arrows = []
 
         self.adj = [[] for _ in range(self.order)]
 
-        for c in kb.graph.concepts:
-            for a in kb.graph.axioms[c.index]:
+        for concept in kb.concepts():
+            for a in concept.sup_arrows:
                 if a.is_derivated:
                     continue
 
@@ -131,13 +132,14 @@ class WeightedGraph:
                     self.negative_arrows += [a.pbox_id]
                     continue
 
-                arrow = self.Arrow(a.concept, weight, a.pbox_id)
-                self.adj[c.index] += [arrow]
+                arrow = self.Arrow(indexes[a.concept.iri], weight, a.pbox_id)
+                self.adj[indexes[concept.iri]] += [arrow]
 
     def add_arrow(self, vertex_1, vertex_2, weight):
         for arrow in self.adj[vertex_1]:
             if arrow.vertex == vertex_2:
                 arrow.weight = weight
+                return
 
         arrow = self.Arrow(vertex_2, weight, -1)
         self.adj[vertex_1] += [arrow]
