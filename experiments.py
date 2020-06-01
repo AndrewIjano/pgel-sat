@@ -5,7 +5,7 @@ import pgel_sat
 
 
 def test_pgel_satisfatibility(
-        concepts_count, axioms_count, prob_axioms_count=0, test_count=1):
+        concepts_count, axioms_count, prob_axioms_count=0, test_count=100):
     def random_knowledge_bases():
         for _ in range(test_count):
             yield pgel_sat.ProbabilisticKnowledgeBase.random(
@@ -43,13 +43,13 @@ def get_datas_by_cols(datas):
 
 
 if __name__ == '__main__':
-    concepts_count = 10
-    axioms_counts = range(1, 200, 20)
-    prob_axioms_counts = [2]
+    concepts_count = 60
+    axioms_counts = range(1, 200, 1)
+    prob_axioms_counts = [10]
 
     data_set = []
     for i, axioms_count in enumerate(axioms_counts):
-        print('axioms:', i, end=' ')
+        print('axioms:', axioms_count, end=' ')
         start_time = time.time()
         sats_and_times_mean = np.empty((len(prob_axioms_counts), 3))
         for j, prob_axioms_count in enumerate(prob_axioms_counts):

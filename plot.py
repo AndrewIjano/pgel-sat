@@ -14,10 +14,10 @@ if __name__ == '__main__':
         means = gp.mean()
         stdevs = gp.std()
 
-        plt.rcParams.update({'font.size': 16})
+        # plt.rcParams.update({'font.size': 16})
         fig, ax1 = plt.subplots()
         ax1.set_xlabel('m/n')
-        # ax1.set_title('PGEL-SAT: SAT proportion and time')
+        ax1.set_title('PGEL-SAT: SAT proportion and time')
 
         sats_mean = means.get('SAT proportion').values
         sats_stdev = stdevs.get('SAT proportion').values

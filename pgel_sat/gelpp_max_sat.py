@@ -132,16 +132,18 @@ class WeightedGraph:
                     self.negative_arrows += [a.pbox_id]
                     continue
 
-                arrow = self.Arrow(indexes[a.concept.iri], weight, a.pbox_id)
-                self.adj[indexes[concept.iri]] += [arrow]
+                vertex_1 = indexes[concept.iri]
+                vertex_2 = indexes[a.concept.iri]
+                self.increment_weight(vertex_1, vertex_2, weight)
+                self.add_pbox_id(vertex_1, vertex_2, a.pbox_id)
 
-    def add_arrow(self, vertex_1, vertex_2, weight):
+    def add_arrow(self, vertex_1, vertex_2, weight, pbox_id=-1):
         for arrow in self.adj[vertex_1]:
             if arrow.vertex == vertex_2:
                 arrow.weight = weight
                 return
 
-        arrow = self.Arrow(vertex_2, weight, -1)
+        arrow = self.Arrow(vertex_2, weight, pbox_id)
         self.adj[vertex_1] += [arrow]
 
     def get_weight(self, vertex_1, vertex_2):
@@ -153,3 +155,9 @@ class WeightedGraph:
     def increment_weight(self, vertex_1, vertex_2, increment):
         current_weight = self.get_weight(vertex_1, vertex_2)
         self.add_arrow(vertex_1, vertex_2, current_weight + increment)
+
+    def add_pbox_id(self, vertex_1, vertex_2, pbox_id):
+        for arrow in self.adj[vertex_1]:
+            if arrow.vertex == vertex_2 and pbox_id != -1:
+                arrow.prob_axiom_index = pbox_id
+                return

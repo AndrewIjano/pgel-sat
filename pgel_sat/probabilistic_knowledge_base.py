@@ -31,6 +31,12 @@ class ProbabilisticKnowledgeBase:
     def concepts(self):
         return self.graph.concepts.values()
 
+    def is_existential(self, concept):
+        return isinstance(concept, gelpp.ExistentialConcept)
+
+    def is_individual(self, concept):
+        return isinstance(concept, gelpp.IndividualConcept)
+
     @classmethod
     def from_file(cls, file):
         graph, pbox_restrictions = owl.parser.parse(file)
@@ -53,30 +59,50 @@ class ProbabilisticKnowledgeBase:
 
     @classmethod
     def random(cls, concepts_count, axioms_count, prob_axioms_count=0):
+        roles_count = 3
         graph = gelpp.Graph('bot', 'top')
 
         for i in range(concepts_count):
-            graph.add_concept(gelpp.Concept(i))
+            concept = gelpp.Concept(str(i))
+            if random.random() < axioms_count / (concepts_count**2):
+                concept = gelpp.IndividualConcept(str(i))
+            graph.add_concept(concept)
 
-        graph.add_role(gelpp.Role('i'))
+        for i in range(roles_count):
+            graph.add_role(gelpp.Role(chr(ord('r') + i)))
 
-        for _ in range(axioms_count):
-            graph.add_axiom(
-                random.choice(graph.get_concepts().iri),
-                random.choice(graph.get_concepts().iri),
-                random.choice(graph.get_roles().iri)
+        roles = [role for role in graph.get_roles() if role != graph.infinity]
+        concepts = [c for c in graph.get_concepts() if c != graph.init]
+
+        axioms = 0
+        while axioms < axioms_count:
+            axioms += graph.add_axiom(
+                random.choice(concepts).iri,
+                random.choice(concepts).iri,
+                random.choice(roles).iri
             )
 
         A = np.zeros((prob_axioms_count, prob_axioms_count))
-        for i in range(prob_axioms_count):
-            graph.add_axiom(
-                random.choice(graph.get_concepts()).iri,
-                random.choice(graph.get_concepts()).iri,
-                random.choice(graph.get_roles()).iri,
-                pbox_id=i
-            )
-            A[i, i] = 1
 
-        b = np.random.random_sample(prob_axioms_count)
+        p_axioms = 0
+        while p_axioms < prob_axioms_count:
+            if graph.add_axiom(
+                random.choice(concepts).iri,
+                random.choice(concepts).iri,
+                random.choice(roles).iri,
+                pbox_id=p_axioms
+            ):
+                p_axioms += 1
+        graph.complete()
+
+        b = np.zeros(prob_axioms_count)
+        axioms_per_restriction = 3
+        for i in range(prob_axioms_count):
+            for j in range(axioms_per_restriction):
+                axiom_index = np.random.randint(
+                    prob_axioms_count)
+                coefficient = np.random.rand()
+                A[i, axiom_index] = coefficient
+            b[i] = np.random.rand()
 
         return cls(graph, A, b)

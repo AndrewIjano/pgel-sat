@@ -4,3 +4,4 @@ swiglpk
 owlready2
 pandas
 matplotlib
+pytest

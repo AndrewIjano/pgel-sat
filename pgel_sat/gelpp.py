@@ -108,9 +108,7 @@ class Arrow():
             return NotImplemented
 
         return (self.concept == other.concept and
-                self.role == other.role and
-                self.pbox_id == other.pbox_id and
-                self.is_derivated == other.is_derivated)
+                self.role == other.role)
 
 
 class Role():
@@ -153,7 +151,7 @@ class Graph():
 
     def get_concept(self, concept_iri):
         return self.concepts[concept_iri]
-    
+
     def get_concepts(self):
         return list(self.concepts.values())
 
