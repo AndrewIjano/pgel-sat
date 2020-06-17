@@ -125,6 +125,13 @@ class IsA(Role):
         super().__init__('is a')
 
 
+class ArtificialRole(Role):
+    def __init__(self, dual_role_iri, concept_iri):
+        self.dual_role_iri = dual_role_iri
+        self.concept_iri = concept_iri
+        super().__init__(f'{dual_role_iri}.{concept_iri}')
+
+
 class Graph():
     def __init__(self, empty_concept_iri, general_concept_iri):
         self.init = Concept('init')
@@ -132,10 +139,9 @@ class Graph():
         self.top = Concept(general_concept_iri)
 
         self.is_a = IsA()
-        self.infinity = Role('∞')
 
         self.concepts = {c.iri: c for c in [self.init, self.bot, self.top]}
-        self.roles = {r.iri: r for r in [self.is_a, self.infinity]}
+        self.roles = {r.iri: r for r in [self.is_a]}
         self.role_inclusions = {}
 
         self.init.add_arrow(Arrow(self.top, self.is_a))
@@ -149,8 +155,28 @@ class Graph():
         if isinstance(concept, IndividualConcept):
             self.init.add_arrow(Arrow(concept, self.is_a))
 
-    def get_concept(self, concept_iri):
-        return self.concepts[concept_iri]
+        if isinstance(concept, ExistentialConcept):
+            self.link_existential_concept(concept)
+
+    def link_existential_concept(self, concept):
+        # get ri
+        role_iri = concept.role_iri
+        # get Cj
+        origin_concept_iri = concept.concept_iri
+        # create rij
+        artificial_role = ArtificialRole(role_iri, origin_concept_iri)
+        # add rij
+        self.add_role(artificial_role)
+        # TODO: check if is derivated
+        # add '∃ri.Cj' ⊑ ∃ri.Cj 
+        self.add_axiom(concept, origin_concept_iri, role_iri)
+        # add Cj ⊑ ∃rij.'∃ri.Cj'
+        self.add_axiom(origin_concept_iri, concept, artificial_role.iri)
+
+    def get_concept(self, concept):
+        if not isinstance(concept, Concept):
+            return self.concepts[concept]
+        return concept
 
     def get_concepts(self):
         return list(self.concepts.values())
@@ -158,8 +184,10 @@ class Graph():
     def add_role(self, role):
         self.roles[role.iri] = role
 
-    def get_role(self, role_iri):
-        return self.roles[role_iri]
+    def get_role(self, role):
+        if not isinstance(role, Role):
+            return self.roles[role]
+        return role
 
     def get_roles(self):
         return list(self.roles.values())
@@ -196,12 +224,9 @@ class Graph():
 
     def add_axiom(self, sub_concept, sup_concept, role,
                   pbox_id=-1, is_derivated=False):
-        if not isinstance(sub_concept, Concept):
-            sub_concept = self.get_concept(sub_concept)
-        if not isinstance(sup_concept, Concept):
-            sup_concept = self.get_concept(sup_concept)
-        if not isinstance(role, Role):
-            role = self.get_role(role)
+        sub_concept = self.get_concept(sub_concept)
+        sup_concept = self.get_concept(sup_concept)
+        role = self.get_role(role)
 
         arrow = Arrow(sup_concept, role, pbox_id, is_derivated)
         if not sub_concept.has_arrow(arrow):
@@ -214,6 +239,14 @@ class Graph():
             return True
         return False
 
+    def check_link_to_existential_concept(self, axiom):
+        sub_concept, sup_concept, role = axiom
+        existential_concept = ExistentialConcept(role.iri, sup_concept.iri) 
+        if existential_concept.iri in self.concepts:
+            existential_concept = self.get_concept(existential_concept.iri)
+            # TODO: check if is derivated and pbox_id implications 
+            self.add_axiom(sub_concept, existential_concept, self.is_a)
+        
     def check_new_derivations_from_axioms(self, axiom):
         sub_concept, sup_concept, role = axiom
         if role == self.is_a:
@@ -243,7 +276,7 @@ class Graph():
         return (concept for concept in self.concepts.values()
                 if isinstance(concept, ExistentialConcept))
 
-    def inidividuals(self):
+    def individuals(self):
         return (concept for concept in self.concepts.values()
                 if isinstance(concept, IndividualConcept))
 
@@ -253,7 +286,6 @@ class Graph():
             e = self.get_concept(ri_e.concept_iri)
             for c in e.sub_concepts(role=i):
                 for d in ri_e.sup_concepts(role=self.is_a):
-                    self.add_axiom(e, ri_e, self.infinity)
                     yield c, d
 
         def complete_rule_5():
@@ -270,7 +302,7 @@ class Graph():
 
         def complete_rule_7():
             ok = False
-            for a in self.inidividuals():
+            for a in self.individuals():
                 for c in a.sub_concepts_reach():
                     for d in a.sub_concepts_reach():
                         if is_reached_by_init(c, d):

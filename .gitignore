@@ -2,3 +2,4 @@
 __pycache__
 *.obda
 *.properties
+.pytest_cache
