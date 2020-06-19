@@ -1,6 +1,8 @@
 from copy import deepcopy
+from . import util
 
 
+# @util.print_gelpp_max_sat_problem
 def solve(kb, weights):
     weighted_graph = WeightedGraph(kb, weights)
     cut_set = min_cut(weighted_graph)

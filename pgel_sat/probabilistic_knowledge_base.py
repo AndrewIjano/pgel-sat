@@ -60,11 +60,34 @@ class ProbabilisticKnowledgeBase:
         return cls(graph, A, b, signs)
 
     @classmethod
-    def random(cls, concepts_count, axioms_count, prob_axioms_count, axioms_per_restriction, prob_restrictions_count):
-        roles_count = 3
+    def random(cls,
+               concepts_count,
+               axioms_count,
+               prob_axioms_count,
+               axioms_per_restriction,
+               prob_restrictions_count,
+               coef_lo,
+               coef_hi,
+               b_lo,
+               b_hi,
+               sign_type,
+               roles_count):
+
+        # print(concepts_count,
+        #       axioms_count,
+        #       prob_axioms_count,
+        #       axioms_per_restriction,
+        #       prob_restrictions_count,
+        #       coef_lo,
+        #       coef_hi,
+        #       b_lo,
+        #       b_hi,
+        #       sign_type,
+        #       roles_count)
+
         graph = gelpp.Graph('bot', 'top')
 
-        for i in range(max(0, concepts_count - prob_axioms_count)):
+        for i in range(concepts_count):
             concept = gelpp.Concept(str(i))
             if random.random() < axioms_count / (concepts_count**2):
                 concept = gelpp.IndividualConcept(str(i))
@@ -77,14 +100,14 @@ class ProbabilisticKnowledgeBase:
         concepts = [c for c in graph.get_concepts() if c != graph.init]
 
         axioms = 0
-        while axioms < axioms_count:
+        while axioms < max(0, axioms_count - prob_axioms_count):
             axioms += graph.add_axiom(
                 random.choice(concepts).iri,
                 random.choice(concepts).iri,
                 random.choice(roles).iri
             )
 
-        A = np.zeros((prob_axioms_count, prob_restrictions_count))
+        A = np.zeros((prob_restrictions_count, prob_axioms_count))
 
         p_axioms = 0
         while p_axioms < prob_axioms_count:
@@ -97,15 +120,25 @@ class ProbabilisticKnowledgeBase:
                 p_axioms += 1
         graph.complete()
 
-        b = np.zeros(prob_axioms_count)
-        signs = []
-        for i in range(prob_axioms_count):
-            for j in range(axioms_per_restriction):
-                axiom_index = np.random.randint(
-                    prob_axioms_count)
-                coefficient = 2*np.random.rand() - 1
-                A[i, axiom_index] = coefficient
-            signs += ['<=']
-            b[i] = axioms_per_restriction * (np.random.rand())
+        get_sign = {
+            'lo': lambda: '<=',
+            'eq': lambda: '==',
+            'hi': lambda: '>=',
+            'all': lambda: random.choice(['<=', '==', '>='])
+        }[sign_type]
 
+        b = np.zeros(prob_restrictions_count)
+        signs = []
+        for i in range(prob_restrictions_count):
+            # for _ in range(axioms_per_restriction):
+            #     axiom_index = np.random.randint(prob_axioms_count)
+            #     coefficient = np.random.uniform(coef_lo, coef_hi)
+            #     A[i, axiom_index] = coefficient
+            A[i, i] = 1
+            signs += [get_sign()]
+            b[i] = np.random.uniform(b_lo, b_hi)
+
+        # print(A)
+        # print(b)
+        # print(signs)
         return cls(graph, A, b, signs)

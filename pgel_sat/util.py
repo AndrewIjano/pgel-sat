@@ -30,9 +30,8 @@ def print_gelpp_max_sat_problem(function):
         return s
 
     def is_real_axiom(kb, sub_concept, sup_arrow):
-        is_inf_role = sup_arrow.role == kb.graph.infinity
         is_init = kb.graph.init in [sub_concept, sup_arrow.concept]
-        return not(is_inf_role or is_init or sup_arrow.is_derivated)
+        return not(is_init or sup_arrow.is_derivated)
 
     def str_weight(pbox_id, weights):
         return '     ∞' if pbox_id < 0 else '{:+5.3f}'.format(weights[pbox_id])

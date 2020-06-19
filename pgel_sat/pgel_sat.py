@@ -113,6 +113,7 @@ def assert_result(product, signs, d):
         if signs[i] in ['==', '=>']:
             assert value > d[i] - EPSILON/2
 
+
 def str_lp(lp):
     return f'''lp solution:
     x: {lp['x']}

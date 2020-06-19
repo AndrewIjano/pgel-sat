@@ -8,6 +8,7 @@ if __name__ == '__main__':
     else:
         dataset = sys.argv[1]
         df = pd.read_csv(dataset)
+        print(df)
         gp = df.groupby(['Concepts count', 'Axioms count'])
         axioms_counts = [j for i, j in gp.groups.keys()]
 
