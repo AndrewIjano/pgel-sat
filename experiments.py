@@ -5,19 +5,29 @@ import pgel_sat
 import argparse
 
 
-def test_pgel_satisfatibility(axioms_count, concepts_count, prob_axioms_count, test_count=100, axioms_per_prob_restriction=2, prob_restrictions_count=10):
-    def random_knowledge_bases():
-        for _ in range(test_count):
-            yield pgel_sat.ProbabilisticKnowledgeBase.random(
-                concepts_count, axioms_count, prob_axioms_count, axioms_per_prob_restriction, prob_restrictions_count)
+def init_argparse():
+    parser = argparse.ArgumentParser(
+        usage='%(prog)s [OPTION]',
+        description='Run experiments for PGEL-SAT algorithm.'
+    )
 
-    sat_and_time_results = np.empty((test_count, 2))
-    for idx, kb in enumerate(random_knowledge_bases()):
-        sat, time = pgel_sat_is_satisfiable(kb)
-        sat_and_time_results[idx, 0] = sat
-        sat_and_time_results[idx, 1] = time
-
-    return np.mean(sat_and_time_results, axis=0)
+    parser.add_argument('-m', '--axioms-range-min', nargs='?',
+                        default=1, type=int, help='minimum number of axioms tested')
+    parser.add_argument('-M', '--axioms-range-max', nargs='?',
+                        default=200, type=int, help='maximum number of axioms tested')
+    parser.add_argument('-s', '--axioms-range-step', nargs='?',
+                        default=1, type=int, help='step between each number of axioms tested in the range')
+    parser.add_argument('-n', '--concepts-count', nargs='?',
+                        default=60, type=int, help='number of concepts tested')
+    parser.add_argument('-p', '--prob-axioms-count', nargs='?', default=10,
+                        type=int, help='number of probabilistic axioms tested')
+    parser.add_argument('-r', '--axioms-per-prob-restriction', nargs='?',
+                        default=2, type=int, help='number of axioms per restriction in pbox')
+    parser.add_argument('-k', '--prob-restrictions-count', nargs='?',
+                        default=10, type=int, help='number of linear restrictions in pbox')
+    parser.add_argument('-t', '--test-count', nargs='?', default=100,
+                        type=int, help='number of tests for each axiom number')
+    return parser
 
 
 def track_time(function):
@@ -34,12 +44,19 @@ def pgel_sat_is_satisfiable(knowledge_base):
     return pgel_sat.is_satisfiable(knowledge_base)
 
 
-def get_datas_by_cols(datas):
-    datas_by_cols = [[] for _ in datas[0]]
-    for data in datas:
-        for idx, item in enumerate(data):
-            datas_by_cols[idx] += [item]
-    return datas_by_cols
+def test_pgel_satisfatibility(axioms_count, concepts_count, prob_axioms_count, test_count=100, axioms_per_prob_restriction=2, prob_restrictions_count=10):
+    def random_knowledge_bases():
+        for _ in range(test_count):
+            yield pgel_sat.ProbabilisticKnowledgeBase.random(
+                concepts_count, axioms_count, prob_axioms_count, axioms_per_prob_restriction, prob_restrictions_count)
+
+    sat_and_time_results = np.empty((test_count, 2))
+    for idx, kb in enumerate(random_knowledge_bases()):
+        sat, time = pgel_sat_is_satisfiable(kb)
+        sat_and_time_results[idx, 0] = sat
+        sat_and_time_results[idx, 1] = time
+
+    return np.mean(sat_and_time_results, axis=0)
 
 
 @track_time
@@ -76,36 +93,10 @@ def create_data_frame(data_set):
             'Time'])
 
 
-def init_argparse():
-    parser = argparse.ArgumentParser(
-        usage='%(prog)s [OPTION]',
-        description='Run experiments for PGEL-SAT algorithm.'
-    )
-
-    parser.add_argument('-m', '--axioms-range-min', nargs='?',
-                        default=1, type=int, help='minimum number of axioms tested')
-
-    parser.add_argument('-M', '--axioms-range-max', nargs='?',
-                        default=200, type=int, help='maximum number of axioms tested')
-
-    parser.add_argument('-s', '--axioms-range-step', nargs='?',
-                        default=1, type=int, help='step between each number of axioms tested in the range')
-
-    parser.add_argument('-n', '--concepts-count', nargs='?',
-                        default=60, type=int, help='number of concepts tested')
-
-    parser.add_argument('-p', '--prob-axioms-count', nargs='?', default=10,
-                        type=int, help='number of probabilistic axioms tested')
-
-    parser.add_argument('-r', '--axioms-per-prob-restriction', nargs='?',
-                        default=2, type=int, help='number of axioms per restriction in pbox')
-
-    parser.add_argument('-k', '--prob-restrictions-count', nargs='?',
-                        default=10, type=int, help='number of linear restrictions in pbox')
-
-    parser.add_argument('-t', '--test-count', nargs='?', default=100,
-                        type=int, help='number of tests for each axiom number')
-    return parser
+def export_data_frame(data_frame, arg_values):
+    filename = 'data/experiments/m{}-M{}-s{}-n{}-p{}-r{}-k{}-t{}.csv'
+    filename = filename.format(*arg_values)
+    data_frame.to_csv(filename, index=False)
 
 
 if __name__ == '__main__':
@@ -124,6 +115,5 @@ if __name__ == '__main__':
         prob_restrictions_count=args.prob_restrictions_count
     )
 
-    df = create_data_frame(data_set)
-    df.to_csv('data/experiments/m{}-M{}-s{}-n{}-p{}-r{}-k{}-t{}.csv'.format(*
-                                                                            (vars(args).values())), index=False)
+    data_frame = create_data_frame(data_set)
+    export_data_frame(data_frame, vars(args).values())
