@@ -2,10 +2,10 @@ import numpy as np
 import swiglpk as glpk
 
 
-def solve(c, C, d):
+def solve(c, C, d, signs=None):
     lp = create_minimization_problem()
 
-    rows_count = set_rows(lp, d)
+    rows_count = set_rows(lp, d, signs)
     cols_count = set_objective(lp, c)
     set_coefficients(lp, C)
 
@@ -27,13 +27,27 @@ def create_minimization_problem():
     return lp
 
 
-def set_rows(lp, d):
+def set_rows(lp, d, signs):
     rows_count = len(d)
+    bnd_types = get_bnd_types(signs, rows_count)
     glpk.glp_add_rows(lp, rows_count)
-    for idx, bnd in enumerate(d):
-        glpk.glp_set_row_bnds(lp, idx + 1, glpk.GLP_FX, bnd, bnd)
+    for idx, (bnd_type, bnd) in enumerate(zip(bnd_types, d)):
+        glpk.glp_set_row_bnds(lp, idx + 1, bnd_type, bnd, bnd)
 
     return rows_count
+
+
+def get_bnd_types(signs, rows_count):
+    if signs is None:
+        [glpk.GLP_FX]*rows_count
+
+    sign_to_type = {
+        '==': glpk.GLP_FX,
+        '<=': glpk.GLP_UP,
+        '>=': glpk.GLP_LO
+    }
+
+    return [sign_to_type[sign] for sign in signs]
 
 
 def set_objective(lp, c):

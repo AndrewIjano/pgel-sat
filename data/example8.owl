@@ -96,11 +96,11 @@
         <rdfs:comment>#!pbox-restriction
 0 -1
 1 1
-=
+==
 0.05</rdfs:comment>
         <rdfs:comment>#!pbox-restriction
 2 1
-=
+==
 0.7</rdfs:comment>
     </rdf:Description>
     

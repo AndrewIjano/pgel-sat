@@ -42,6 +42,7 @@ class ProbabilisticKnowledgeBase:
         graph, pbox_restrictions = owl.parser.parse(file)
         graph.complete()
 
+        signs = []
         b = []
         rows, cols, data = [], [], []
         for row, pbox_restriction in enumerate(pbox_restrictions):
@@ -51,11 +52,12 @@ class ProbabilisticKnowledgeBase:
                 rows += [row]
                 cols += [col]
                 data += [coefficient]
+            signs += [sign]
             b += [value]
 
         A = sp.coo_matrix((data, (rows, cols))).todense()
         b = np.array(b)
-        return cls(graph, A, b)
+        return cls(graph, A, b, signs)
 
     @classmethod
     def random(cls, concepts_count, axioms_count, prob_axioms_count=0):
@@ -71,7 +73,7 @@ class ProbabilisticKnowledgeBase:
         for i in range(roles_count):
             graph.add_role(gelpp.Role(chr(ord('r') + i)))
 
-        roles = [role for role in graph.get_roles() if role != graph.infinity]
+        roles = [role for role in graph.get_roles()]
         concepts = [c for c in graph.get_concepts() if c != graph.init]
 
         axioms = 0
@@ -96,13 +98,15 @@ class ProbabilisticKnowledgeBase:
         graph.complete()
 
         b = np.zeros(prob_axioms_count)
-        axioms_per_restriction = 3
+        signs = []
+        AXIOMS_PER_RESTRICTION = 2
         for i in range(prob_axioms_count):
-            for j in range(axioms_per_restriction):
+            for j in range(AXIOMS_PER_RESTRICTION):
                 axiom_index = np.random.randint(
                     prob_axioms_count)
-                coefficient = np.random.rand()
+                coefficient = 2*np.random.rand() - 1
                 A[i, axiom_index] = coefficient
-            b[i] = np.random.rand()
+            signs += ['<=']
+            b[i] = AXIOMS_PER_RESTRICTION * (np.random.rand())
 
-        return cls(graph, A, b)
+        return cls(graph, A, b, signs)

@@ -19,10 +19,12 @@ def solve(kb):
     c = initialize_c(kb)
     d = initialize_d(kb)
 
+    signs = initialize_signs(kb)
     trace(f'C:\n {C}')
     trace(f'c: {c}')
     trace(f'd: {d}')
-    lp = linprog.solve(c, C, d)
+    trace(f'signs: {signs}')
+    lp = linprog.solve(c, C, d, signs)
 
     trace(str_lp(lp))
 
@@ -40,13 +42,11 @@ def solve(kb):
         C = np.column_stack((C, column))
         c = np.append(c, 0)
 
-        lp = linprog.solve(c, C, d)
+        lp = linprog.solve(c, C, d, signs)
         trace(str_lp(lp))
         i += 1
 
-    assert (C @ lp['x'] < d + EPSILON / 2).all()
-    assert (C @ lp['x'] > d - EPSILON / 2).all()
-
+    assert_result(C @ lp['x'], signs, d)
     return {'satisfiable': True, 'lp': lp}
 
 
@@ -70,6 +70,10 @@ def initialize_c(kb):
 
 def initialize_d(kb):
     return np.hstack((np.zeros(kb.n()), kb.b, 1))
+
+
+def initialize_signs(kb):
+    return ['==']*kb.n() + kb.signs + ['==']
 
 
 def is_min_cost_zero(lp):
@@ -101,6 +105,13 @@ def extract_column(kb, result):
     column = np.hstack((m_column, np.zeros(kb.k()), 1))
     return column
 
+
+def assert_result(product, signs, d):
+    for i, value in enumerate(product.T):
+        if signs[i] in ['==', '<=']:
+            assert value < d[i] + EPSILON/2
+        if signs[i] in ['==', '=>']:
+            assert value > d[i] - EPSILON/2
 
 def str_lp(lp):
     return f'''lp solution:
