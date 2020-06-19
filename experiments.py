@@ -56,7 +56,6 @@ def run_experiment(*args, **kwargs):
 
 def run_experiments(axioms_range, *args, **kwargs):
     data_set = []
-    print(args)
     for axioms_count in axioms_range:
         print('axioms:', axioms_count, end=' ')
         experiment = (axioms_count, *args)
@@ -116,7 +115,6 @@ if __name__ == '__main__':
     axioms_range = range(args.axioms_range_min,
                          args.axioms_range_max, args.axioms_range_step)
 
-    print(*vars(args).values())
     data_set = run_experiments(
         axioms_range,
         args.concepts_count,
