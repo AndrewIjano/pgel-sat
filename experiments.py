@@ -4,6 +4,24 @@ import pandas as pd
 import pgel_sat
 import argparse
 
+def main():
+    parser = init_argparse()
+    args = parser.parse_args()
+
+    axioms_range = range(args.axioms_range_min,
+                         args.axioms_range_max, args.axioms_range_step)
+
+    data_set = run_experiments(
+        axioms_range,
+        args.concepts_count,
+        args.prob_axioms_count,
+        test_count=args.test_count,
+        axioms_per_prob_restriction=args.axioms_per_prob_restriction,
+        prob_restrictions_count=args.prob_restrictions_count
+    )
+
+    data_frame = create_data_frame(data_set)
+    export_data_frame(data_frame, vars(args).values())
 
 def init_argparse():
     parser = argparse.ArgumentParser(
@@ -30,6 +48,17 @@ def init_argparse():
     return parser
 
 
+def run_experiments(axioms_range, *args, **kwargs):
+    data_set = []
+    for axioms_count in axioms_range:
+        print('axioms:', axioms_count, end=' ')
+        experiment = (axioms_count, *args)
+        data, exec_time = run_experiment(*experiment, **kwargs)
+        data_set += [data]
+        print(exec_time)
+    return data_set
+
+
 def track_time(function):
     def wrap(*args, **kwargs):
         start = time.time()
@@ -40,9 +69,15 @@ def track_time(function):
 
 
 @track_time
-def pgel_sat_is_satisfiable(knowledge_base):
-    return pgel_sat.is_satisfiable(knowledge_base)
+def run_experiment(*args, **kwargs):
+    sat_mean, time_mean = test_pgel_satisfatibility(*args, **kwargs)
+    concepts_count, axioms_count, prob_axioms_count = args
 
+    return (concepts_count,
+            axioms_count / concepts_count,
+            prob_axioms_count,
+            sat_mean,
+            time_mean)
 
 def test_pgel_satisfatibility(axioms_count, concepts_count, prob_axioms_count, test_count=100, axioms_per_prob_restriction=2, prob_restrictions_count=10):
     def random_knowledge_bases():
@@ -60,26 +95,8 @@ def test_pgel_satisfatibility(axioms_count, concepts_count, prob_axioms_count, t
 
 
 @track_time
-def run_experiment(*args, **kwargs):
-    sat_mean, time_mean = test_pgel_satisfatibility(*args, **kwargs)
-    concepts_count, axioms_count, prob_axioms_count = args
-
-    return (concepts_count,
-            axioms_count / concepts_count,
-            prob_axioms_count,
-            sat_mean,
-            time_mean)
-
-
-def run_experiments(axioms_range, *args, **kwargs):
-    data_set = []
-    for axioms_count in axioms_range:
-        print('axioms:', axioms_count, end=' ')
-        experiment = (axioms_count, *args)
-        data, exec_time = run_experiment(*experiment, **kwargs)
-        data_set += [data]
-        print(exec_time)
-    return data_set
+def pgel_sat_is_satisfiable(knowledge_base):
+    return pgel_sat.is_satisfiable(knowledge_base)
 
 
 def create_data_frame(data_set):
@@ -98,22 +115,5 @@ def export_data_frame(data_frame, arg_values):
     filename = filename.format(*arg_values)
     data_frame.to_csv(filename, index=False)
 
-
 if __name__ == '__main__':
-    parser = init_argparse()
-    args = parser.parse_args()
-
-    axioms_range = range(args.axioms_range_min,
-                         args.axioms_range_max, args.axioms_range_step)
-
-    data_set = run_experiments(
-        axioms_range,
-        args.concepts_count,
-        args.prob_axioms_count,
-        test_count=args.test_count,
-        axioms_per_prob_restriction=args.axioms_per_prob_restriction,
-        prob_restrictions_count=args.prob_restrictions_count
-    )
-
-    data_frame = create_data_frame(data_set)
-    export_data_frame(data_frame, vars(args).values())
+    main()
