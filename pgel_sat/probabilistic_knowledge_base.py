@@ -60,11 +60,11 @@ class ProbabilisticKnowledgeBase:
         return cls(graph, A, b, signs)
 
     @classmethod
-    def random(cls, concepts_count, axioms_count, prob_axioms_count=0):
+    def random(cls, concepts_count, axioms_count, prob_axioms_count, axioms_per_restriction, prob_restrictions_count):
         roles_count = 3
         graph = gelpp.Graph('bot', 'top')
 
-        for i in range(concepts_count):
+        for i in range(max(0, concepts_count - prob_axioms_count)):
             concept = gelpp.Concept(str(i))
             if random.random() < axioms_count / (concepts_count**2):
                 concept = gelpp.IndividualConcept(str(i))
@@ -84,7 +84,7 @@ class ProbabilisticKnowledgeBase:
                 random.choice(roles).iri
             )
 
-        A = np.zeros((prob_axioms_count, prob_axioms_count))
+        A = np.zeros((prob_axioms_count, prob_restrictions_count))
 
         p_axioms = 0
         while p_axioms < prob_axioms_count:
@@ -99,14 +99,13 @@ class ProbabilisticKnowledgeBase:
 
         b = np.zeros(prob_axioms_count)
         signs = []
-        AXIOMS_PER_RESTRICTION = 2
         for i in range(prob_axioms_count):
-            for j in range(AXIOMS_PER_RESTRICTION):
+            for j in range(axioms_per_restriction):
                 axiom_index = np.random.randint(
                     prob_axioms_count)
                 coefficient = 2*np.random.rand() - 1
                 A[i, axiom_index] = coefficient
             signs += ['<=']
-            b[i] = AXIOMS_PER_RESTRICTION * (np.random.rand())
+            b[i] = axioms_per_restriction * (np.random.rand())
 
         return cls(graph, A, b, signs)
