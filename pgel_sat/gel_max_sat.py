@@ -1,16 +1,19 @@
 from copy import deepcopy
-from . import util
+from collections import namedtuple, deque
 
 
-# @util.print_gelpp_max_sat_problem
+def is_satisfiable(kb, weights):
+    return solve(kb, weights)['success']
+
+
 def solve(kb, weights):
     weighted_graph = WeightedGraph(kb, weights)
     cut_set = min_cut(weighted_graph)
-    if cut_set['is_weight_infinity']:
+    if cut_set.has_infinity_weight:
         return {'success': False}
 
     return {'success': True,
-            'prob_axiom_indexes': cut_set['prob_axiom_indexes']}
+            'prob_axiom_indexes': cut_set.prob_axiom_indexes}
 
 
 def min_cut(weighted_graph):
@@ -41,16 +44,16 @@ def get_augment_path(residual_graph, s, t):
     visited = [False] * residual_graph.order
     parent = [0] * residual_graph.order
 
-    queue = [s]
+    queue = deque([s])
     visited[s] = True
     parent[s] = -1
 
     while len(queue) > 0:
-        u = queue.pop(0)
+        u = queue.pop()
         for arrow in residual_graph.adj[u]:
             v = arrow.vertex
             if not visited[v] and arrow.weight > 0:
-                queue += [v]
+                queue.appendleft(v)
                 visited[v] = True
                 parent[v] = u
 
@@ -84,22 +87,24 @@ def dfs(residual_graph, s):
 
 
 def get_cut_set(weighted_graph, visited):
-    is_weight_infinity = False
+    has_infinity_weight = False
     prob_axiom_indexes = weighted_graph.negative_arrows
 
     for v, arrows in enumerate(weighted_graph.adj):
         for arrow in arrows:
             if visited[v] and not visited[arrow.vertex]:
                 if arrow.prob_axiom_index < 0:
-                    is_weight_infinity = True
+                    has_infinity_weight = True
                 prob_axiom_indexes += [arrow.prob_axiom_index]
 
-    return {'is_weight_infinity': is_weight_infinity,
-            'prob_axiom_indexes': prob_axiom_indexes}
+    CutSet = namedtuple('CutSet', [
+        'has_infinity_weight',
+        'prob_axiom_indexes'])
+    return CutSet(has_infinity_weight, prob_axiom_indexes)
 
 
 class WeightedGraph:
-    class Arrow():
+    class Arrow:
         def __init__(self, vertex, weight, prob_axiom_index):
             self.vertex = vertex
             self.weight = weight
@@ -109,26 +114,33 @@ class WeightedGraph:
             return f'({self.vertex}, {self.weight}, {self.prob_axiom_index})'
 
     def __init__(self, kb, weights):
-        indexes = {j.iri: i for i, j in enumerate(kb.concepts())}
+        indexes = {j.iri: i for i, j in enumerate(kb.concepts)}
+        weights = [] if weights is None else weights
 
-        self.order = len(kb.concepts())
-        self.infinity = max(weights) + 1
+        self.order = len(kb.concepts)
+        self.infinity = max(weights) + 1 if len(weights) > 0 else 1
 
-        self.init = indexes[kb.init()]
-        self.bottom = indexes[kb.bottom()]
+        self.init = indexes[kb.init.iri]
+        self.bottom = indexes[kb.bot.iri]
         self.negative_arrows = []
 
         self.adj = [[] for _ in range(self.order)]
 
-        for concept in kb.concepts():
-            for a in concept.sup_arrows:
-                if a.is_derivated:
-                    continue
+        def get_weight(arrow):
+            pbox_id = arrow.pbox_id
+            if pbox_id >= len(weights):
+                raise Exception(
+                    f'Invalid PBox ID: {pbox_id}. ' +
+                    f'You could define {pbox_id - len(weights) + 1}' +
+                    'more weights.')
 
-                if a.pbox_id < 0:
-                    weight = self.infinity
-                else:
-                    weight = weights[a.pbox_id]
+            if pbox_id < 0:
+                return self.infinity
+            return weights[pbox_id]
+
+        for concept in kb.concepts:
+            for a in concept.sup_arrows:
+                weight = get_weight(a)
 
                 if weight < 0:
                     self.negative_arrows += [a.pbox_id]
