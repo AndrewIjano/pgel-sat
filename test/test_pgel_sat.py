@@ -1,4 +1,5 @@
 from pgel_sat import ProbabilisticKnowledgeBase, solve
+import pytest
 
 
 def test_example8_is_correct():
@@ -21,14 +22,9 @@ def test_example8_is_correct():
                           2.0424164559293503e-09, -2.148781755390826e-09]
     goal_lp_solution_cost = 2.829786666581838e-09
 
-    kb = ProbabilisticKnowledgeBase.from_file('data/example8.owl')
+    kb = ProbabilisticKnowledgeBase.from_file('../data/example.owl')
     result = solve(kb)
     assert result['satisfiable'] == goal_is_satisfiable
-    assert result['lp']['x'] == goal_lp_solution_x
-    assert result['lp']['y'] == goal_lp_solution_y
-    assert result['lp']['cost'] == goal_lp_solution_cost
-
-
-if __name__ == '__main__':
-    test_example8_is_correct()
-    print('all tests passed!')
+    assert result['lp'].x == goal_lp_solution_x
+    assert result['lp'].y == goal_lp_solution_y
+    assert result['lp'].cost == goal_lp_solution_cost

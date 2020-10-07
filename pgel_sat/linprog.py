@@ -1,5 +1,8 @@
 import numpy as np
 import swiglpk as glpk
+from collections import namedtuple
+
+LPSolution = namedtuple('LPSolution', ['x', 'y', 'cost'])
 
 
 def solve(c, C, d, signs=None):
@@ -16,7 +19,7 @@ def solve(c, C, d, signs=None):
     cost = get_cost(lp)
 
     delete_problem(lp)
-    return {'x': x, 'y': y, 'cost': cost}
+    return LPSolution(x, y, cost)
 
 
 def create_minimization_problem():
@@ -39,7 +42,7 @@ def set_rows(lp, d, signs):
 
 def get_bnd_types(signs, rows_count):
     if signs is None:
-        [glpk.GLP_FX]*rows_count
+        return [glpk.GLP_FX] * rows_count
 
     sign_to_type = {
         '==': glpk.GLP_FX,

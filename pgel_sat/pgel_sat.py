@@ -43,7 +43,7 @@ def solve(kb):
         trace(str_lp(lp))
         i += 1
 
-    assert_result(C @ lp['x'], signs, d)
+    assert_result(C @ lp.x, signs, d)
     return {'satisfiable': True, 'lp': lp}
 
 
@@ -74,11 +74,11 @@ def initialize_signs(kb):
 
 
 def is_min_cost_zero(lp):
-    return isclose(lp['cost'], 0, abs_tol=EPSILON)
+    return isclose(lp.cost, 0, abs_tol=EPSILON)
 
 
 def get_weights(lp):
-    return np.array(lp['y'])
+    return np.array(lp.y)
 
 
 def generate_column(kb, weights):
@@ -113,9 +113,9 @@ def assert_result(product, signs, d):
 
 def str_lp(lp):
     return f'''lp solution:
-    x: {lp['x']}
-    y: {lp['y']}
-    cost: {lp['cost']}'''
+    x: {lp.x}
+    y: {lp.y}
+    cost: {lp.cost}'''
 
 
 def trace(string):
