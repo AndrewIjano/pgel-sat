@@ -1,6 +1,6 @@
 from math import isclose
 import numpy as np
-from . import gelpp_max_sat
+from . import gel_max_sat
 from . import linprog
 
 EPSILON = 1e-7
@@ -12,9 +12,6 @@ def is_satisfiable(kb):
 
 
 def solve(kb):
-    if kb.graph.has_path_init_to_bot():
-        {'satisfiable': False}
-
     C = initialize_C(kb)
     c = initialize_c(kb)
     d = initialize_d(kb)
@@ -46,46 +43,46 @@ def solve(kb):
         trace(str_lp(lp))
         i += 1
 
-    assert_result(C @ lp['x'], signs, d)
+    assert_result(C @ lp.x, signs, d)
     return {'satisfiable': True, 'lp': lp}
 
 
 def initialize_C(kb):
-    C_left = np.identity(kb.n() + kb.k() + 1)
+    C_left = np.identity(kb.n + kb.k + 1)
 
     C_right = np.vstack((
-        - np.identity(kb.n()),
+        - np.identity(kb.n),
         kb.A,
-        np.zeros(kb.n())
+        np.zeros(kb.n)
     ))
 
     return np.hstack((C_left, C_right))
 
 
 def initialize_c(kb):
-    c_left = np.ones(kb.n() + kb.k() + 1)
-    c_right = np.zeros(kb.n())
+    c_left = np.ones(kb.n + kb.k + 1)
+    c_right = np.zeros(kb.n)
     return np.hstack((c_left, c_right))
 
 
 def initialize_d(kb):
-    return np.hstack((np.zeros(kb.n()), kb.b, 1))
+    return np.hstack((np.zeros(kb.n), kb.b, 1))
 
 
 def initialize_signs(kb):
-    return ['==']*kb.n() + kb.signs + ['==']
+    return ['==']*kb.n + kb.signs + ['==']
 
 
 def is_min_cost_zero(lp):
-    return isclose(lp['cost'], 0, abs_tol=EPSILON)
+    return isclose(lp.cost, 0, abs_tol=EPSILON)
 
 
 def get_weights(lp):
-    return np.array(lp['y'])
+    return np.array(lp.y)
 
 
 def generate_column(kb, weights):
-    result = gelpp_max_sat.solve(kb, weights)
+    result = gel_max_sat.solve(kb, weights)
 
     if not result['success']:
         return {'success': False}
@@ -98,11 +95,11 @@ def generate_column(kb, weights):
 
 
 def extract_column(kb, result):
-    m_column = np.ones(kb.n())
+    m_column = np.ones(kb.n)
     for prob_axiom_index in result['prob_axiom_indexes']:
         m_column[prob_axiom_index] = 0
 
-    column = np.hstack((m_column, np.zeros(kb.k()), 1))
+    column = np.hstack((m_column, np.zeros(kb.k), 1))
     return column
 
 
@@ -116,9 +113,9 @@ def assert_result(product, signs, d):
 
 def str_lp(lp):
     return f'''lp solution:
-    x: {lp['x']}
-    y: {lp['y']}
-    cost: {lp['cost']}'''
+    x: {lp.x}
+    y: {lp.y}
+    cost: {lp.cost}'''
 
 
 def trace(string):

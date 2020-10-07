@@ -39,31 +39,30 @@ def main():
 def init_argparse():
     parser = argparse.ArgumentParser(
         usage='%(prog)s [options]',
-        description='Run experiments for PGEL-SAT algorithm.',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description='Run experiments for PGEL-SAT algorithm.'
     )
 
     parser.add_argument('-m', '--axioms-range-min', nargs='?',
                         default=11, type=int, help='minimum number of axioms tested')
-    
+
     parser.add_argument('-M', '--axioms-range-max', nargs='?',
                         default=200, type=int, help='maximum number of axioms tested')
-    
+
     parser.add_argument('-s', '--axioms-range-step', nargs='?',
                         default=1, type=int, help='step between each number of axioms tested in the range')
-    
+
     parser.add_argument('-n', '--concepts-count', nargs='?',
                         default=60, type=int, help='number of concepts tested')
-    
+
     parser.add_argument('-p', '--prob-axioms-count', nargs='?', default=10,
                         type=int, help='number of probabilistic axioms tested')
-    
+
     parser.add_argument('-a', '--axioms-per-prob-restriction', nargs='?',
                         default=2, type=int, help='number of axioms per restriction in pbox')
-    
+
     parser.add_argument('-k', '--prob-restrictions-count', nargs='?',
                         default=10, type=int, help='number of linear restrictions in pbox')
-    
+
     parser.add_argument('-t', '--test-count', nargs='?', default=100,
                         type=int, help='number of tests for each axiom number')
 
@@ -103,11 +102,9 @@ def run_experiments(axioms_range, *args, **kwargs):
     for axioms_count in axioms_range:
         print_verbose(end='  {:3}  | '.format(axioms_count))
         experiment = (axioms_count, *args)
-        # print('>>>', experiment)
         data, exec_time = run_experiment(*experiment, **kwargs)
         data_set += [data]
         print_verbose('{:.5f}'.format(exec_time))
-        print(data)
     return data_set
 
 
@@ -117,27 +114,29 @@ def track_time(function):
         result = function(*args, **kwargs)
         end = time.time()
         return result, end - start
+
     return wrap
 
 
 @track_time
 def run_experiment(*args, **kwargs):
-    sat_mean, time_mean = test_pgel_satisfatibility(*args, **kwargs)
+    (sat_mean, time_mean), (sat_std, time_std) = test_pgel_satisfiability(*args, **kwargs)
     axioms_count, concepts_count, prob_axioms_count = args
     return (concepts_count,
             axioms_count / concepts_count,
             prob_axioms_count,
             sat_mean,
-            time_mean)
+            time_mean,
+            sat_std,
+            time_std)
 
 
-def test_pgel_satisfatibility(axioms_count,
-                              concepts_count,
-                              prob_axioms_count,
-                              *args,
-                              test_count,
-                              **kwargs):
-
+def test_pgel_satisfiability(axioms_count,
+                             concepts_count,
+                             prob_axioms_count,
+                             *args,
+                             test_count,
+                             **kwargs):
     def random_knowledge_bases():
         for _ in range(test_count):
             yield pgel_sat.ProbabilisticKnowledgeBase.random(
@@ -152,7 +151,7 @@ def test_pgel_satisfatibility(axioms_count,
         sat_and_time_results[idx, 0] = sat
         sat_and_time_results[idx, 1] = time
 
-    return np.mean(sat_and_time_results, axis=0)
+    return np.mean(sat_and_time_results, axis=0), np.std(sat_and_time_results, axis=0)
 
 
 @track_time
@@ -167,8 +166,11 @@ def create_data_frame(data_set):
             'Concepts count',
             'Axioms count',
             'Probability axioms count',
-            'SAT proportion',
-            'Time'])
+            'SAT proportion mean',
+            'Time mean',
+            'SAT proportion std',
+            'Time std',
+        ])
 
 
 def export_data_frame(data_frame, arg_values):

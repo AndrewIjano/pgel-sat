@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="urn:absolute:example#"
+     xml:base="urn:absolute:example"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:obda="https://w3id.org/obda/vocabulary#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:untitled-ontology-23="http://www.semanticweb.org/andrew/ontologies/2019/10/untitled-ontology-23#">
+    <owl:Ontology rdf:about="urn:absolute:example"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- urn:absolute:example#hasCause -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:example#hasCause"/>
+    
+
+
+    <!-- urn:absolute:example#hasSymptom -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:example#hasSymptom"/>
+    
+
+
+    <!-- urn:absolute:example#isFatherOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:example#isFatherOf">
+        <rdfs:subPropertyOf rdf:resource="urn:absolute:example#isParentOf"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- urn:absolute:example#isGrandfatherOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:example#isGrandfatherOf">
+        <owl:propertyChainAxiom rdf:parseType="Collection">
+            <rdf:Description rdf:about="urn:absolute:example#isFatherOf"/>
+            <rdf:Description rdf:about="urn:absolute:example#isFatherOf"/>
+        </owl:propertyChainAxiom>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- urn:absolute:example#isParentOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:example#isParentOf"/>
+    
+
+
+    <!-- urn:absolute:example#suspectOf -->
+
+    <owl:ObjectProperty rdf:about="urn:absolute:example#suspectOf">
+        <owl:propertyChainAxiom rdf:parseType="Collection">
+            <rdf:Description rdf:about="urn:absolute:example#hasSymptom"/>
+            <rdf:Description rdf:about="urn:absolute:example#hasCause"/>
+        </owl:propertyChainAxiom>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#Nothing -->
+
+    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Nothing">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    </rdf:Description>
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#Thing -->
+
+    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
+        <rdfs:comment>#!pbox-restriction
+0 -1
+1 1
+==
+0.05</rdfs:comment>
+        <rdfs:comment>#!pbox-restriction
+2 1
+==
+0.7</rdfs:comment>
+    </rdf:Description>
+    
+
+
+    <!-- urn:absolute:example#Dengue -->
+
+    <owl:Class rdf:about="urn:absolute:example#Dengue">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
+        <rdfs:subClassOf rdf:resource="urn:absolute:example#Disease"/>
+    </owl:Class>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="urn:absolute:example#Dengue"/>
+        <owl:annotatedProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#subClassOf"/>
+        <owl:annotatedTarget rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
+        <rdfs:comment>#!pbox-id 2</rdfs:comment>
+    </owl:Axiom>
+    
+
+
+    <!-- urn:absolute:example#Disease -->
+
+    <owl:Class rdf:about="urn:absolute:example#Disease"/>
+    
+
+
+    <!-- urn:absolute:example#Fever -->
+
+    <owl:Class rdf:about="urn:absolute:example#Fever">
+        <rdfs:subClassOf rdf:resource="urn:absolute:example#Symptom"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#hasCause"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Dengue"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="urn:absolute:example#Fever"/>
+        <owl:annotatedProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#subClassOf"/>
+        <owl:annotatedTarget>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#hasCause"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Dengue"/>
+            </owl:Restriction>
+        </owl:annotatedTarget>
+        <rdfs:comment>#!pbox-id 0</rdfs:comment>
+    </owl:Axiom>
+    
+
+
+    <!-- urn:absolute:example#FeverAndRash -->
+
+    <owl:Class rdf:about="urn:absolute:example#FeverAndRash">
+        <rdfs:subClassOf rdf:resource="urn:absolute:example#Fever"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#hasCause"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Dengue"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="urn:absolute:example#FeverAndRash"/>
+        <owl:annotatedProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#subClassOf"/>
+        <owl:annotatedTarget>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#hasCause"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Dengue"/>
+            </owl:Restriction>
+        </owl:annotatedTarget>
+        <rdfs:comment>#!pbox-id 1</rdfs:comment>
+    </owl:Axiom>
+    
+
+
+    <!-- urn:absolute:example#Monitored -->
+
+    <owl:Class rdf:about="urn:absolute:example#Monitored"/>
+    
+
+
+    <!-- urn:absolute:example#Patient -->
+
+    <owl:Class rdf:about="urn:absolute:example#Patient">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#hasSymptom"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Symptom"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- urn:absolute:example#SuspectOfDengue -->
+
+    <owl:Class rdf:about="urn:absolute:example#SuspectOfDengue">
+        <owl:equivalentClass>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#suspectOf"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Dengue"/>
+            </owl:Restriction>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="urn:absolute:example#Monitored"/>
+    </owl:Class>
+    
+
+
+    <!-- urn:absolute:example#Symptom -->
+
+    <owl:Class rdf:about="urn:absolute:example#Symptom">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="urn:absolute:example#hasCause"/>
+                <owl:someValuesFrom rdf:resource="urn:absolute:example#Disease"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- urn:absolute:example#john -->
+
+    <owl:NamedIndividual rdf:about="urn:absolute:example#john">
+        <rdf:type rdf:resource="urn:absolute:example#Patient"/>
+        <hasSymptom rdf:resource="urn:absolute:example#s1"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- urn:absolute:example#s1 -->
+
+    <owl:NamedIndividual rdf:about="urn:absolute:example#s1">
+        <rdf:type rdf:resource="urn:absolute:example#FeverAndRash"/>
+    </owl:NamedIndividual>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi -->
+
