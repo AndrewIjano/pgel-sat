@@ -84,7 +84,7 @@ def graph_complete_rule_5():
     graph.add_axiom('a', 'D-1', graph.is_a)
     return graph
 
-@pytest.mark.timeout(1)
+
 def test_graph_concepts(simple_graph):
     expected_iris = [
         'init',
@@ -104,7 +104,6 @@ def test_graph_concepts(simple_graph):
     assert simple_graph.concepts == expected_concepts
 
 
-@pytest.mark.timeout(1)
 def test_graph_individuals(simple_graph):
     expected_iris = [
         'a'
@@ -119,11 +118,11 @@ def test_graph_individuals(simple_graph):
     assert simple_graph.individuals == expected_individuals
 
 
-@pytest.mark.timeout(1)
 def test_graph_roles(simple_graph):
     expected_iris = [
         'is a',
-        'r'
+        'r',
+        'r.C'
     ]
 
     expected_roles = [
@@ -135,7 +134,6 @@ def test_graph_roles(simple_graph):
     assert simple_graph.roles == expected_roles
 
 
-@pytest.mark.timeout(1)
 def test_graph_link_init(simple_graph):
     init = simple_graph.init
     concept_iris = ['top', 'a', 'C']
@@ -149,14 +147,17 @@ def test_graph_link_init(simple_graph):
     assert concepts[2] not in init.is_a()
 
 
-@pytest.mark.timeout(1)
 def test_graph_link_existential_concept(simple_graph):
-    is_axiom_added = simple_graph.add_axiom('r.C', 'C', 'r',
-                                            is_immutable=True)
-    assert not is_axiom_added
+    is_axiom_existential_to_concept_added = simple_graph.add_axiom('r.C', 'C', 'r',
+                                                                   is_immutable=True)
+
+    is_axiom_concept_to_existential_added = simple_graph.add_axiom('C', 'r.C', 'r.C',
+                                                                   is_immutable=True)
+
+    assert not is_axiom_existential_to_concept_added
+    assert not is_axiom_concept_to_existential_added
 
 
-@pytest.mark.timeout(1)
 def test_graph_add_axiom():
     graph = gel.KnowledgeBase('bot', 'top')
     graph.add_concept(gel.Concept('C'))
@@ -165,7 +166,6 @@ def test_graph_add_axiom():
     assert not graph.add_axiom('C', 'D', graph.is_a)
 
 
-@pytest.mark.timeout(1)
 def test_graph_fix_existential_head_axiom(simple_graph):
     concept_d = gel.Concept('D')
     simple_graph.add_concept(concept_d)
@@ -176,7 +176,6 @@ def test_graph_fix_existential_head_axiom(simple_graph):
     assert existential_concept in concept_d.is_a()
 
 
-@pytest.mark.timeout(1)
 def test_graph_add_pbox_axiom():
     graph = gel.KnowledgeBase('bot', 'top')
     assert graph.pbox_axioms == {}
@@ -194,7 +193,6 @@ def test_graph_add_pbox_axiom():
     assert graph.pbox_axioms == {0: expected_axiom}
 
 
-@pytest.mark.timeout(1)
 def test_graph_can_handle_multiple_completions():
     graph = gel.KnowledgeBase.random(concepts_count=100,
                                      axioms_count=1000,

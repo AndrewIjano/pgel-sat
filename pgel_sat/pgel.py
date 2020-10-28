@@ -3,9 +3,12 @@ import scipy.sparse as sp
 import random
 from . import owl, gel
 
+EMPTY_MATRIX = np.empty((0,0))
+EMPTY_ARRAY = np.empty(0)
+
 
 class ProbabilisticKnowledgeBase(gel.KnowledgeBase):
-    def __init__(self, empty_concept_iri, general_concept_iri, A=None, b=None, signs=[]):
+    def __init__(self, empty_concept_iri, general_concept_iri, A=EMPTY_MATRIX, b=EMPTY_ARRAY, signs=[]):
         super().__init__(empty_concept_iri, general_concept_iri)
         self.A = A
         self.b = b

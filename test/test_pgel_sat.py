@@ -1,5 +1,30 @@
 from pgel_sat import ProbabilisticKnowledgeBase, solve
+from pgel_sat import gel
 import pytest
+
+
+@pytest.fixture()
+def empty_kb():
+    return ProbabilisticKnowledgeBase('bot', 'top')
+
+
+def test_kb_far_existential_concept_is_unsatisfiable(empty_kb):
+    kb = empty_kb
+
+    kb.add_concept(gel.IndividualConcept('a'))
+    kb.add_concept(gel.IndividualConcept('b'))
+    kb.add_concept(gel.Concept('B'))
+    kb.add_role(gel.Role('r'))
+
+    kb.add_axiom('a', 'b', 'r')
+    kb.add_axiom('b', 'B', kb.is_a)
+
+    rB = gel.ExistentialConcept('r', 'B')
+    kb.add_concept(rB)
+    kb.add_axiom(rB, kb.bot, kb.is_a)
+
+    result = solve(kb)
+    assert not result['satisfiable']
 
 
 def test_example8_is_correct():

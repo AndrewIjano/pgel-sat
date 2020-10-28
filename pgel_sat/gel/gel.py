@@ -6,7 +6,7 @@ from .concepts import (
     ExistentialConcept,
     IndividualConcept,
 )
-from .roles import Role, IsA
+from .roles import Role, IsA, ArtificialRole
 from .arrows import Arrow
 
 from collections import defaultdict
@@ -133,15 +133,27 @@ class KnowledgeBase:
 
         role.axioms = new_role_axioms()
 
-    def link_existential_concept(self, concept):
+    def link_existential_concept(self, existential_concept):
         # get ri
-        role_iri = concept.role_iri
+        role_iri = existential_concept.role_iri
         # get Cj
-        origin_concept_iri = concept.concept_iri
+        concept_iri = existential_concept.concept_iri
+
+        # create u_{ri.Cj}
+        artificial_role = ArtificialRole(role_iri, concept_iri)
+        self.add_role(artificial_role)
+        # link concept and existential concept
+        self.add_axiom(
+            concept_iri,
+            existential_concept,
+            artificial_role,
+            is_immutable=True
+        )
+
         # add '∃ri.Cj' ⊑ ∃ri.Cj
         self.add_axiom(
-            concept,
-            origin_concept_iri,
+            existential_concept,
+            concept_iri,
             role_iri,
             is_immutable=True)
 

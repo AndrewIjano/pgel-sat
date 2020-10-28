@@ -22,3 +22,12 @@ class IsA(Role):
     def __init__(self):
         super().__init__('is a')
         self.is_isa = True
+
+
+class ArtificialRole(Role):
+    def __init__(self, role_iri, concept_iri):
+        self.role_iri = role_iri
+        self.concept_iri = concept_iri
+
+        iri = role_iri + '.' + concept_iri
+        super().__init__(iri)
