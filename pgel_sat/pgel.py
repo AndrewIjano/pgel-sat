@@ -3,7 +3,7 @@ import scipy.sparse as sp
 import random
 from . import owl, gel
 
-EMPTY_MATRIX = np.empty((0,0))
+EMPTY_MATRIX = np.empty((0, 0))
 EMPTY_ARRAY = np.empty(0)
 
 
@@ -65,8 +65,10 @@ class ProbabilisticKnowledgeBase(gel.KnowledgeBase):
                sign_type,
                roles_count):
 
-        kb = super(ProbabilisticKnowledgeBase, cls).random(concepts_count, axioms_count, prob_axioms_count)
+        kb = super(ProbabilisticKnowledgeBase, cls).random(
+            concepts_count, axioms_count, prob_axioms_count)
 
+        prob_restrictions_count = prob_axioms_count
         A = np.zeros((prob_restrictions_count, prob_axioms_count))
 
         get_sign = {

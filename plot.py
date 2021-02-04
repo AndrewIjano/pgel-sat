@@ -6,12 +6,12 @@ import argparse
 
 SMOOTHING_FACTOR = 5
 
-COLOR_1 = 'tab:blue'
-COLOR_2 = 'tab:red'
+COLOR_1 = 'navy'
+COLOR_2 = 'firebrick'
 
-TITLE = 'GEL-MaxSAT: SAT proportion and time'
-X_LABEL = 'm/n'
-Y_LABEL_LEFT = '%GEL-MaxSAT'
+TITLE = 'PGEL-SAT: SAT proportion and time'
+X_LABEL = '$m$/$n$'
+Y_LABEL_LEFT = '\%PGEL-SAT'
 Y_LABEL_RIGHT = 'time (s)'
 
 DF_SAT_MEAN_LABEL = 'SAT proportion mean'
@@ -19,6 +19,14 @@ DF_SAT_STD_LABEL = 'SAT proportion std'
 
 DF_TIME_MEAN_LABEL = 'Time mean'
 DF_TIME_STD_LABEL = 'Time std'
+
+plt.rcParams.update({
+    'text.usetex': True,
+    'text.latex.preamble': '''  \\usepackage{libertine} 
+                                \\usepackage[libertine]{newtxmath} 
+                                \\usepackage[T1]{fontenc}
+                            '''
+})
 
 
 def main():
@@ -31,16 +39,16 @@ def main():
     ax1, ax2 = init_plot(args)
 
     sats_mean, _ = sats
-    plot_curve(axioms_counts, sats_mean, args, ax1, COLOR_1)
+    plot_curve(axioms_counts, sats_mean, args, ax1, COLOR_1, '-')
 
     times_mean, _ = times
-    plot_curve(axioms_counts, times_mean, args, ax2, COLOR_2)
+    plot_curve(axioms_counts, times_mean, args, ax2, COLOR_2, '--')
 
     if not args.no_objective_curves:
         plot_logit_fit(axioms_counts, sats_mean, ax1)
 
     filename = extract_filename(experiment_path)
-    plt.savefig(f'data/plots/{filename}.png', bbox_inches='tight')
+    plt.savefig(f'data/plots/{filename}.png', bbox_inches='tight', dpi=300)
 
     if args.show:
         plt.show()
@@ -51,7 +59,7 @@ def main():
 def init_argparse():
     parser = argparse.ArgumentParser(
         usage='%(prog)s [options] experiment',
-        description='Plot experiment for GEL-MaxSAT algorithm.'
+        description='Plot experiment for PGEL-SAT algorithm.'
     )
 
     parser.add_argument('experiment', nargs=1, type=str,
@@ -115,10 +123,10 @@ def running_average(data_list, size):
     return list(map(smooth_data, data_list))
 
 
-def plot_curve(axioms_counts, values_mean, args, ax, color):
+def plot_curve(axioms_counts, values_mean, args, ax, color, ls):
     axioms_counts, values_mean = running_average(
         [axioms_counts, values_mean], args.moving_average_size)
-    ax.plot(axioms_counts, values_mean, color=color)
+    ax.plot(axioms_counts, values_mean, color=color, ls=ls)
 
 
 def plot_logit_fit(axioms_counts, sats_mean, ax1):
@@ -127,13 +135,13 @@ def plot_logit_fit(axioms_counts, sats_mean, ax1):
 
     popt, _ = curve_fit(logit_fn, axioms_counts, sats_mean)
     logit_vals = logit_fn(axioms_counts, *popt)
-    ax1.plot(axioms_counts, logit_vals, color=COLOR_1, ls='--')
+    ax1.plot(axioms_counts, logit_vals, color=COLOR_1, ls=':')
 
 
 def plot_linear_fit(axioms_counts, times_mean, ax2):
     coef = np.polyfit(axioms_counts, times_mean, 1)
     poly1d_fn = np.poly1d(coef)
-    ax2.plot(axioms_counts, poly1d_fn(axioms_counts), color=COLOR_2, ls='--')
+    ax2.plot(axioms_counts, poly1d_fn(axioms_counts), color=COLOR_2, ls=':')
 
 
 def extract_filename(path):

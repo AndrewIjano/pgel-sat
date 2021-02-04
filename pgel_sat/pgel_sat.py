@@ -2,6 +2,7 @@ from math import isclose
 import numpy as np
 from . import gel_max_sat
 from . import linprog
+import time
 
 EPSILON = 1e-7
 TRACE = False
@@ -26,13 +27,14 @@ def solve(kb):
     trace(str_lp(lp))
 
     i = 0
+    iteration_times = []
     while not is_min_cost_zero(lp):
+        start = time.time()
         trace(f'\n\niteration: {i}')
-        weights = get_weights(lp)
-        trace(f'weights {weights}')
-        result = generate_column(kb, weights)
+        result = generate_column(kb, lp)
         if not result['success']:
-            return {'satisfiable': False}
+            return {'satisfiable': False, 'iterations': i,
+                    'iteration_times': iteration_times}
         trace(f'column {result["column"]}')
 
         column = result['column']
@@ -42,9 +44,12 @@ def solve(kb):
         lp = linprog.solve(c, C, d, signs)
         trace(str_lp(lp))
         i += 1
+        end = time.time()
+        iteration_times += [end - start]
 
     assert_result(C @ lp.x, signs, d)
-    return {'satisfiable': True, 'lp': lp}
+    return {'satisfiable': True, 'lp': lp, 'iterations': i,
+            'iteration_times': iteration_times}
 
 
 def initialize_C(kb):
@@ -81,8 +86,11 @@ def get_weights(lp):
     return np.array(lp.y)
 
 
-def generate_column(kb, weights):
-    result = gel_max_sat.solve(kb, weights)
+def generate_column(kb, lp):
+    weights = get_weights(lp)
+    trace(f'weights {weights}')
+
+    result = gel_max_sat.solve(kb, weights[:kb.n])
 
     if not result['success']:
         return {'success': False}

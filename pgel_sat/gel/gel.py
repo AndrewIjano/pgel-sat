@@ -229,8 +229,7 @@ class KnowledgeBase:
             graph.add_role(Role(chr(ord('r') + i)))
 
         # add certain axioms randomly
-        certain_axioms_count = max(0, axioms_count - uncertain_axioms_count)
-        graph.add_random_axioms(certain_axioms_count)
+        graph.add_random_axioms(axioms_count)
 
         # add uncertain axioms randomly
         graph.add_random_axioms(uncertain_axioms_count, is_uncertain=True)

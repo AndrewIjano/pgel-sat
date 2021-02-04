@@ -5,3 +5,4 @@ owlready2
 pandas
 matplotlib
 pytest
+sklearn
